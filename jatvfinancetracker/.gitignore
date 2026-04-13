@@ -12,6 +12,9 @@
 .swiftpm/
 migrate_working_dir/
 
+#google api
+**/app/google-services.json
+
 #.env variables
 .env
 .env.local

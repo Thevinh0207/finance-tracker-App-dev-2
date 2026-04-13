@@ -138,7 +138,23 @@ Widget loginInputCard(
               ),
             ],
           ),
-          SizedBox(height: 5),
+          SizedBox(height: 10),
+          GestureDetector(
+            onTap: (){
+
+            },
+            child: Text(
+                'Forgot Password',
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.lightBlue,
+                decoration: TextDecoration.underline
+              ),
+            ),
+          ),
+          SizedBox(
+            height: 3,
+          ),
           Text(message),
           SizedBox(height: 10),
           ElevatedButton(
