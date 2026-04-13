@@ -1,88 +1,84 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
-import '';
+import 'package:bcrypt/bcrypt.dart';
 
 class User {
-  int? _userID;
-  String _firstName;
-  String _lastName;
-  String _email;
-  String _password;
-  double _income;
-  double _moneySpent;
+  final String userID;
+  final String firstName;
+  final String lastName;
+  final String email;
+  final String password;
+  final List<Transaction> transaction;
 
-  User({
-    required int? userID,
+
+
+  User
+    ({required this.userID,
+        required this.firstName,
+        required this.lastName,
+        required this.email,
+        required this.password,
+        required this.transaction
+    });
+
+  User._privateConstructor({
+    required this.userID,
+    required this.firstName,
+    required this.lastName,
+    required this.email,
+    required this.password,
+    required this.transaction
+  });
+
+
+
+  Map<String, dynamic> toMap(){
+    return {
+      'userID'      : userID,
+      'firstName'   : firstName,
+      'lastName'    : lastName,
+      'email'       : email,
+      'password'    : password,
+    };
+  }
+
+  factory User.fromMap(Map<String, dynamic> map){
+    return User(
+      userID: map['userID'],
+      firstName: map['firstName'],
+      lastName: map['lastname'],
+      email: map['email'],
+      password: map['password'],
+      transaction: map['transaction']
+    );
+  }
+
+  //create the uuid + hash the password when creating a User object
+  factory User.create({
     required String firstName,
     required String lastName,
     required String email,
     required String password,
-    required double income,
-    required double moneySpent,
-  })  : _userID = userID,
-        _firstName = firstName,
-        _lastName = lastName,
-        _email = email,
-        _password = password,
-        _income = income,
-        _moneySpent = moneySpent;
+    List<Transaction> transaction = const [],
+  })  {
+    final String userID = const Uuid().v4();
+    final String hashedPassword = BCrypt.hashpw(
+      password,
+      BCrypt.gensalt(),
+    );
 
-
-  User.UserNoIDConstructor({
-    required String firstName,
-    required String lastName,
-    required String email,
-    required String password,
-    required double income,
-    required double moneySpent
-  }): _firstName = firstName,
-      _lastName = lastName,
-      _email = email,
-      _password = password,
-      _income = income,
-      _moneySpent = moneySpent;
-
-  double get moneySpent => _moneySpent;
-
-  set moneySpent(double value) {
-    _moneySpent = value;
+    return User._privateConstructor(
+      userID: userID,
+      firstName: firstName,
+      lastName: lastName,
+      email: email,
+      password: hashedPassword,
+      transaction: transaction,
+    );
   }
-
-  double get income => _income;
-
-  set income(double value) {
-    _income = value;
-  }
-
-  String get password => _password;
-
-  set password(String value) {
-    _password = value;
-  }
-
-  String get email => _email;
-
-  set email(String value) {
-    _email = value;
-  }
-
-  String get lastName => _lastName;
-
-  set lastName(String value) {
-    _lastName = value;
-  }
-
-  String get firstName => _firstName;
-
-  set firstName(String value) {
-    _firstName = value;
-  }
-
-  int? get userID => _userID;
-
-  set userID(int value) {
-    _userID = value;
+  
+  bool verifyPassword(String inputPassword) {
+    return BCrypt.checkpw(inputPassword, password);
   }
 
 }
-
-
