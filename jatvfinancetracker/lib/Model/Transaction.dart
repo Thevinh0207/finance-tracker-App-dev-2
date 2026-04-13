@@ -1,6 +1,6 @@
 import '../helper/TransactionType.dart';
 
-abstract class Transaction {
+class Transaction {
   int? transactionID;
   String transactionName;
   TransactionType type;

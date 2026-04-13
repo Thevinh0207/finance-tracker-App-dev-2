@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:jatvfinancetracker/Model/Budget.dart';
+import 'package:jatvfinancetracker/Model/Categorie.dart';
 import 'package:uuid/uuid.dart';
 import 'package:bcrypt/bcrypt.dart';
 
@@ -9,6 +11,8 @@ class User {
   final String email;
   final String password;
   final List<Transaction> transaction;
+  final List<Categorie> categories;
+  final List<Budget> budgets;
 
 
 
@@ -18,7 +22,9 @@ class User {
         required this.lastName,
         required this.email,
         required this.password,
-        required this.transaction
+        required this.transaction,
+        required this.categories,
+        required this.budgets
     });
 
   User._privateConstructor({
@@ -27,7 +33,9 @@ class User {
     required this.lastName,
     required this.email,
     required this.password,
-    required this.transaction
+    required this.transaction,
+    required this.categories,
+    required this.budgets
   });
 
 
@@ -49,7 +57,9 @@ class User {
       lastName: map['lastname'],
       email: map['email'],
       password: map['password'],
-      transaction: map['transaction']
+      transaction: map['transaction'],
+      categories: map['categories'],
+      budgets: map['budgets']
     );
   }
 
@@ -60,6 +70,8 @@ class User {
     required String email,
     required String password,
     List<Transaction> transaction = const [],
+    List<Categorie> categories = const [],
+    List<Budget> budgets = const []
   })  {
     final String userID = const Uuid().v4();
     final String hashedPassword = BCrypt.hashpw(
@@ -74,6 +86,8 @@ class User {
       email: email,
       password: hashedPassword,
       transaction: transaction,
+      categories: categories,
+      budgets: budgets
     );
   }
   
