@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+
 void main() => runApp(signUpPage());
 
 class signUpPage extends StatelessWidget {
@@ -28,10 +29,11 @@ class _signUpCardState extends State<signUpCard> {
   final passwordController = TextEditingController();
 
 
-
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+
+    );
   }
 }
 
