@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jatvfinancetracker/view/loginPage.dart';
-
-void main() => runApp(ForgotPasswordPage());
-
+import '../viewModel/ForgotPasswordViewModel.dart';
 
 class ForgotPasswordPage extends StatelessWidget {
   const ForgotPasswordPage({super.key});
@@ -25,109 +23,131 @@ class ForgotPasswordCard extends StatefulWidget {
 
 class _ForgotPasswordCardState extends State<ForgotPasswordCard> {
   final TextEditingController emailController = TextEditingController();
+  final ForgotPasswordViewModel _vm = ForgotPasswordViewModel();
 
+  @override
+  void dispose() {
+    emailController.dispose();
+    _vm.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final success = await _vm.sendResetEmail();
+    if (!mounted) return;
+    if (success) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => successPage(_vm.email),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white12,
       body: Center(
-        child: Container(
-          height: 400,
-          width: 400,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                height: 80,
-                width: 80,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.blueAccent,
-                      Colors.lightBlueAccent
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Icon(
-                  Icons.mail_outlined,
-                  color: Colors.white,
-                  size: 50,
-                ),
-              ),
-              SizedBox(height: 15,),
-              Text(
-                'RESET PASSWORD',
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 25,
-                ),
-              ),
-              Text("Enter your email address and we'll send you "),
-              Text("instructions to reset your password"),
-              SizedBox(height: 20,),
+        child: ListenableBuilder(
+          listenable: _vm,
+          builder: (context, _) => _buildCard(),
+        ),
+      ),
+    );
+  }
 
-              SizedBox(
-                width: 300,
-                child: TextField(
-                  showCursor: true,
-                  decoration: InputDecoration(
-                    hintText: 'Enter Email',
-                    fillColor: Colors.white,
-                    filled: true,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  controller: emailController,
-                ),
+  Widget _buildCard() {
+    return Container(
+      height: 440,
+      width: 400,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            height: 80,
+            width: 80,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Colors.blueAccent, Colors.lightBlueAccent],
               ),
-              SizedBox(height: 20,),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => successPage(emailController.text.trim()),
-                    ),
-                  );
-                },
-                child: Text(
-                    'Send Reset Link',
-                  style: TextStyle(color: Colors.white),
-                ),
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  backgroundColor: Colors.blue,
-                  minimumSize: Size(300, 50),
-                ),
-              ),
-            ],
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(Icons.mail_outlined, color: Colors.white, size: 50),
           ),
-        )
-
-
+          SizedBox(height: 15),
+          Text(
+            'RESET PASSWORD',
+            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 25),
+          ),
+          Text("Enter your email address and we'll send you "),
+          Text("instructions to reset your password"),
+          SizedBox(height: 20),
+          SizedBox(
+            width: 300,
+            child: TextField(
+              showCursor: true,
+              controller: emailController,
+              onChanged: _vm.setEmail,
+              decoration: InputDecoration(
+                hintText: 'Enter Email',
+                fillColor: Colors.white,
+                filled: true,
+                contentPadding: EdgeInsets.symmetric(horizontal: 10),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+          if (_vm.error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: Text(
+                _vm.error!,
+                style: TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: _vm.isLoading ? null : _submit,
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              backgroundColor: Colors.blue,
+              minimumSize: Size(300, 50),
+            ),
+            child: _vm.isLoading
+                ? SizedBox(
+                    height: 22,
+                    width: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
+                  )
+                : Text(
+                    'Send Reset Link',
+                    style: TextStyle(color: Colors.white),
+                  ),
+          ),
+        ],
       ),
     );
   }
 }
 
-
-
 class successPage extends StatelessWidget {
   final String email;
 
   const successPage(this.email, {super.key});
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -135,7 +155,7 @@ class successPage extends StatelessWidget {
       body: Center(
         child: SizedBox(
           width: 300,
-          child:Column(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -149,63 +169,26 @@ class successPage extends StatelessWidget {
                 child: Icon(
                   Icons.check_circle_outline,
                   color: Colors.green,
-                  size: 65 ,
+                  size: 65,
                 ),
               ),
-              SizedBox(
-                height: 15,
-              ),
+              SizedBox(height: 15),
               Text(
                 'Check Your Email',
-                style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold
-                ),
+                style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 3,),
+              SizedBox(height: 3),
               Text("We've sent password reset instructions to "),
-              Text(
-                email,
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold
-                ),
-              ),
-              SizedBox(height: 15,),
+              Text(email, style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 15),
               ElevatedButton(
-                  onPressed: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => loginPage()
-                      ),
-                      );
-                  },
-                  child: Container(
-                    height: 50,
-                    width: 450,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.blueAccent,
-                          Colors.lightBlueAccent
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    child: Center(
-                      child: Text(
-                        'Back to login',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold
-                        ),
-                      ),
-
-                    ),
-                  ),
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => loginPage()),
+                    (route) => false,
+                  );
+                },
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.zero,
                   backgroundColor: Colors.transparent,
@@ -214,17 +197,55 @@ class successPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(25),
                   ),
                 ),
+                child: Container(
+                  height: 50,
+                  width: 300,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Colors.blueAccent, Colors.lightBlueAccent],
+                    ),
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Back to login',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              SizedBox(height: 15,),
-              ElevatedButton(
-                onPressed: (){
-
-                },
-                child: Text(
-                  'Resend Email',
-                  style: TextStyle(
+              SizedBox(height: 15),
+              SizedBox(
+                height: 50,
+                width: 300,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ForgotPasswordPage(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: Text(
+                    'Resend Email',
+                    style: TextStyle(
                       color: Colors.lightBlue,
-                      fontWeight: FontWeight.bold
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),

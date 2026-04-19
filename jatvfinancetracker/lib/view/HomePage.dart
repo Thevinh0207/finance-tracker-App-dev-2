@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'loginPage.dart';
-
-void main() => runApp(homePage());
+import 'ProfileSettingsPage.dart';
+import '../viewModel/HomePageViewModel.dart';
 
 class homePage extends StatelessWidget {
-  const homePage({super.key});
+  final String userID;
+  const homePage({super.key, required this.userID});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: 'Roboto'),
-      home: mainDashboard(),
+      home: mainDashboard(userID: userID),
     );
   }
 }
 
 class mainDashboard extends StatefulWidget {
-  const mainDashboard({super.key});
+  final String userID;
+  const mainDashboard({super.key, required this.userID});
 
   @override
   State<mainDashboard> createState() => _mainDashboardState();
@@ -27,38 +28,67 @@ class mainDashboard extends StatefulWidget {
 class _mainDashboardState extends State<mainDashboard> {
   int _selectedIndex = 0;
   bool _balanceVisible = true;
+  final HomePageViewModel _vm = HomePageViewModel();
 
-  final double totalBalance = 25430.50;
-  final double income = 12500;
-  final double expenses = 8200;
-  final double savings = 4300;
+  @override
+  void initState() {
+    super.initState();
+    _vm.load(widget.userID);
+  }
+
+  @override
+  void dispose() {
+    _vm.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF4A90D9),
+      backgroundColor:  Color(0xFF4A90D9),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: Stack(
-                children: [
-                  SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        _buildHeader(),
-                        _buildBalanceCard(),
-                        SizedBox(height: 12),
-                        _buildWhiteSheet(),
-                      ],
+        child: ListenableBuilder(
+          listenable: _vm,
+          builder: (context, _) {
+            if (_vm.isLoading && _vm.user == null) {
+              return  Center(
+                child: CircularProgressIndicator(color: Colors.white),
+              );
+            }
+            if (_vm.error != null) {
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Text(
+                    'Error: ${_vm.error}',
+                    style:  TextStyle(color: Colors.white),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              );
+            }
+            return Column(
+              children: [
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: () => _vm.refresh(widget.userID),
+                    child: SingleChildScrollView(
+                      physics:  AlwaysScrollableScrollPhysics(),
+                      child: Column(
+                        children: [
+                          _buildHeader(),
+                          _buildBalanceCard(),
+                           SizedBox(height: 12),
+                          _buildWhiteSheet(),
+                        ],
+                      ),
                     ),
                   ),
-                ],
-              ),
-            ),
-
-            _buildBottomNav(),
-          ],
+                ),
+                _buildBottomNav(),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -66,20 +96,20 @@ class _mainDashboardState extends State<mainDashboard> {
 
   Widget _buildHeader() {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      padding:  EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+               Text(
                 'Welcome back,',
                 style: TextStyle(color: Colors.white70, fontSize: 14),
               ),
               Text(
-                'John Doe',
-                style: TextStyle(
+                _vm.displayName.isEmpty ? 'User' : _vm.displayName,
+                style:  TextStyle(
                   color: Colors.white,
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -90,15 +120,19 @@ class _mainDashboardState extends State<mainDashboard> {
           Row(
             children: [
               _headerIconButton(Icons.notifications_outlined),
-              SizedBox(width: 10),
+               SizedBox(width: 10),
               GestureDetector(
                 onTap: () {
-                  Navigator.pushReplacement(
+                  final user = _vm.user;
+                  if (user == null) return;
+                  Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => loginPage()),
+                    MaterialPageRoute(
+                      builder: (_) => ProfileSettingsPage(user: user),
+                    ),
                   );
                 },
-                child: _headerIconButton(Icons.logout),
+                child: _headerIconButton(Icons.person_outline),
               ),
             ],
           ),
@@ -121,9 +155,9 @@ class _mainDashboardState extends State<mainDashboard> {
 
   Widget _buildBalanceCard() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding:  EdgeInsets.symmetric(horizontal: 20),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding:  EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.18),
           borderRadius: BorderRadius.circular(20),
@@ -134,7 +168,7 @@ class _mainDashboardState extends State<mainDashboard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                 Text(
                   'Total Balance',
                   style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
@@ -148,22 +182,22 @@ class _mainDashboardState extends State<mainDashboard> {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+             SizedBox(height: 10),
             Text(
-              _balanceVisible ? '\$${_formatAmount(totalBalance)}' : '••••••',
-              style: const TextStyle(
+              _balanceVisible ? '\$${_formatAmount(_vm.totalBalance)}' : '••••••',
+              style:  TextStyle(
                 color: Colors.white,
                 fontSize: 34,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,
               ),
             ),
-            const SizedBox(height: 16),
+             SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildStatBox('Income', income, isIncome: true)),
-                const SizedBox(width: 12),
-                Expanded(child: _buildStatBox('Expenses', expenses, isIncome: false)),
+                Expanded(child: _buildStatBox('Income', _vm.income, isIncome: true)),
+                 SizedBox(width: 12),
+                Expanded(child: _buildStatBox('Expenses', _vm.expenses, isIncome: false)),
               ],
             ),
           ],
@@ -174,7 +208,7 @@ class _mainDashboardState extends State<mainDashboard> {
 
   Widget _buildStatBox(String label, double amount, {required bool isIncome}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding:  EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.15),
         borderRadius: BorderRadius.circular(12),
@@ -189,17 +223,17 @@ class _mainDashboardState extends State<mainDashboard> {
                 color: isIncome ? Colors.greenAccent : Colors.orangeAccent,
                 size: 14,
               ),
-              SizedBox(width: 4),
+               SizedBox(width: 4),
               Text(
                 label,
-                style: TextStyle(color: Colors.white70, fontSize: 11),
+                style:  TextStyle(color: Colors.white70, fontSize: 11),
               ),
             ],
           ),
-          SizedBox(height: 4),
+           SizedBox(height: 4),
           Text(
             '\$${_formatAmount(amount)}',
-            style: TextStyle(
+            style:  TextStyle(
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -212,18 +246,18 @@ class _mainDashboardState extends State<mainDashboard> {
 
   Widget _buildWhiteSheet() {
     return Container(
-      decoration: BoxDecoration(
+      decoration:  BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(30),
           topRight: Radius.circular(30),
         ),
       ),
-      padding: EdgeInsets.all(20),
+      padding:  EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+           Text(
             'Spending Overview',
             style: TextStyle(
               fontSize: 18,
@@ -231,44 +265,30 @@ class _mainDashboardState extends State<mainDashboard> {
               color: Color(0xFF1A1A2E),
             ),
           ),
-          SizedBox(height: 20),
-
+           SizedBox(height: 20),
           Center(child: _buildDonutChart()),
-
-          SizedBox(height: 20),
-
+           SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildLegendItem('Income', '\$${_formatAmount(income)}', const Color(0xFF4CAF50)),
-              _buildLegendItem('Expenses', '\$${_formatAmount(expenses)}', const Color(0xFFE53935)),
-              _buildLegendItem('Savings', '\$${_formatAmount(savings)}', const Color(0xFF5C9BD6)),
+              _buildLegendItem('Income', '\$${_formatAmount(_vm.income)}',  Color(0xFF4CAF50)),
+              _buildLegendItem('Expenses', '\$${_formatAmount(_vm.expenses)}',  Color(0xFFE53935)),
+              _buildLegendItem('Savings', '\$${_formatAmount(_vm.savings)}',  Color(0xFF5C9BD6)),
             ],
           ),
-
-          SizedBox(height: 24),
-
+           SizedBox(height: 24),
           Row(
             children: [
               Expanded(
-                child: _buildActionButton(
-                  'This Month',
-                  Icons.show_chart,
-                  const Color(0xFF4CAF50),
-                ),
+                child: _buildActionButton('This Month', Icons.show_chart,  Color(0xFF4CAF50)),
               ),
               SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
-                  'Savings Rate',
-                  Icons.trending_down,
-                  Color(0xFFE65100),
-                ),
+                child: _buildActionButton('Savings Rate', Icons.trending_down,  Color(0xFFE65100)),
               ),
             ],
           ),
-
-          SizedBox(height: 16),
+           SizedBox(height: 16),
         ],
       ),
     );
@@ -280,9 +300,9 @@ class _mainDashboardState extends State<mainDashboard> {
       height: 200,
       child: CustomPaint(
         painter: DonutChartPainter(
-          income: income,
-          expenses: expenses,
-          savings: savings,
+          income: _vm.income,
+          expenses: _vm.expenses,
+          savings: _vm.savings,
         ),
       ),
     );
@@ -299,14 +319,14 @@ class _mainDashboardState extends State<mainDashboard> {
               height: 10,
               decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
-            SizedBox(width: 6),
-            Text(label, style: TextStyle(color: Colors.grey, fontSize: 12)),
+             SizedBox(width: 6),
+            Text(label, style:  TextStyle(color: Colors.grey, fontSize: 12)),
           ],
         ),
-        SizedBox(height: 4),
+         SizedBox(height: 4),
         Text(
           amount,
-          style: TextStyle(
+          style:  TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 13,
             color: Color(0xFF1A1A2E),
@@ -318,7 +338,7 @@ class _mainDashboardState extends State<mainDashboard> {
 
   Widget _buildActionButton(String label, IconData icon, Color color) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 14),
+      padding:  EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(14),
@@ -327,10 +347,10 @@ class _mainDashboardState extends State<mainDashboard> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: Colors.white, size: 18),
-          SizedBox(width: 8),
+           SizedBox(width: 8),
           Text(
             label,
-            style: TextStyle(
+            style:  TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
               fontSize: 14,
@@ -352,11 +372,11 @@ class _mainDashboardState extends State<mainDashboard> {
     ];
 
     return Container(
-      decoration: BoxDecoration(
+      decoration:  BoxDecoration(
         color: Colors.white,
         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
       ),
-      padding: EdgeInsets.symmetric(vertical: 8),
+      padding:  EdgeInsets.symmetric(vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: List.generate(items.length, (i) {
@@ -368,15 +388,15 @@ class _mainDashboardState extends State<mainDashboard> {
               children: [
                 Icon(
                   items[i]['icon'] as IconData,
-                  color: selected ? Color(0xFF4A90D9) : Colors.grey,
+                  color: selected ?  Color(0xFF4A90D9) : Colors.grey,
                   size: 24,
                 ),
-                SizedBox(height: 3),
+                 SizedBox(height: 3),
                 Text(
                   items[i]['label'] as String,
                   style: TextStyle(
                     fontSize: 10,
-                    color: selected ? Color(0xFF4A90D9) : Colors.grey,
+                    color: selected ?  Color(0xFF4A90D9) : Colors.grey,
                     fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                   ),
                 ),
@@ -417,6 +437,7 @@ class DonutChartPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final total = income + expenses + savings;
+    if (total <= 0) return;
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
     const strokeWidth = 36.0;
@@ -425,8 +446,8 @@ class DonutChartPainter extends CustomPainter {
 
     final segments = [
       {'value': income, 'color':  Color(0xFF4CAF50)},
-      {'value': expenses, 'color': Color(0xFFE53935)},
-      {'value': savings, 'color': Color(0xFF5C9BD6)},
+      {'value': expenses, 'color':  Color(0xFFE53935)},
+      {'value': savings, 'color':  Color(0xFF5C9BD6)},
     ];
 
     double startAngle = -math.pi / 2;
@@ -435,13 +456,14 @@ class DonutChartPainter extends CustomPainter {
     for (final seg in segments) {
       final value = seg['value'] as double;
       final color = seg['color'] as Color;
+      if (value <= 0) continue;
       final sweepAngle = (value / total) * 2 * math.pi - gapAngle;
 
-      final paint = Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeWidth
-        ..strokeCap = StrokeCap.butt;
+      final paint = Paint();
+        paint.color = color;
+        paint.style = PaintingStyle.stroke;
+        paint.strokeWidth = strokeWidth;
+        paint.strokeCap = StrokeCap.butt;
 
       canvas.drawArc(rect, startAngle, sweepAngle, false, paint);
       startAngle += sweepAngle + gapAngle;
@@ -449,5 +471,6 @@ class DonutChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant DonutChartPainter old) =>
+      old.income != income || old.expenses != expenses || old.savings != savings;
 }
