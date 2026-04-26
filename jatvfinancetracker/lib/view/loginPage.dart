@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb;
 
 import 'ForgotPasswordPage.dart';
 import 'signUpPage.dart';
 import 'HomePage.dart';
 import '2FAPage.dart';
+import 'EmailVerificationPage.dart';
 import '../viewModel/LoginViewModel.dart';
+import '../Repository/UserSettingsRepository.dart';
 
 class loginPage extends StatelessWidget {
   const loginPage({super.key});
@@ -26,6 +29,7 @@ class _loginCardState extends State<loginCard> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final LoginViewModel _vm = LoginViewModel();
+  final UserSettingsRepository _settingsRepo = UserSettingsRepository();
 
   @override
   void dispose() {
@@ -39,12 +43,39 @@ class _loginCardState extends State<loginCard> {
     final success = await _vm.login();
     if (!mounted) return;
     if (success) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => homePage(userID: _vm.user!.userID),
-        ),
-      );
+      final userID = _vm.user!.userID;
+      final authUser = fb.FirebaseAuth.instance.currentUser;
+
+      if (authUser != null && !authUser.emailVerified) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EmailVerificationPage(userID: userID),
+          ),
+        );
+        return;
+      }
+
+      final settings = await _settingsRepo.getOrCreate(userID);
+      if (!mounted) return;
+      if (settings.twoFactorEnabled) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TwoFactorPage(
+              userID: userID,
+              email: _vm.user!.email,
+            ),
+          ),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => homePage(userID: userID),
+          ),
+        );
+      }
     } else if (_vm.mfaRequired) {
       Navigator.push(
         context,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:jatvfinancetracker/view/loginPage.dart';
+import 'PasswordResetPage.dart';
 import '../viewModel/ForgotPasswordViewModel.dart';
 
 class ForgotPasswordPage extends StatelessWidget {
@@ -36,10 +37,10 @@ class _ForgotPasswordCardState extends State<ForgotPasswordCard> {
     final success = await _vm.sendResetEmail();
     if (!mounted) return;
     if (success) {
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => successPage(_vm.email),
+          builder: (_) => PasswordResetPage(email: _vm.email),
         ),
       );
     }
