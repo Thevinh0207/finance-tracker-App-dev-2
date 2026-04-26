@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'HomePage.dart';
+import 'EmailVerificationPage.dart';
 import '/viewModel/SignUpViewModel.dart';
 import 'loginPage.dart';
 
@@ -46,7 +46,7 @@ class _signUpCardState extends State<signUpCard> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => homePage(userID: _vm.user!.userID),
+          builder: (context) => EmailVerificationPage(userID: _vm.user!.userID),
         ),
       );
     }

@@ -49,8 +49,16 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   }
 
   Future<void> _update(UserSettings next) async {
+    if (!mounted) return;
     setState(() => _settings = next);
-    await _repo.save(next);
+    try {
+      await _repo.save(next);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save: $e')),
+      );
+    }
   }
 
   Future<void> _logout(BuildContext context) async {
@@ -58,7 +66,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     if (!context.mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (_) => const loginPage()),
+      MaterialPageRoute(builder: (_) => loginPage()),
       (route) => false,
     );
   }
@@ -66,29 +74,29 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FA),
+      backgroundColor: Color(0xFFF4F6FA),
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Profile & Settings',
           style: TextStyle(
             color: Color(0xFF1A1A2E),
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color(0xFFF4F6FA),
+        backgroundColor: Color(0xFFF4F6FA),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Color(0xFF1A1A2E)),
+        iconTheme: IconThemeData(color: Color(0xFF1A1A2E)),
       ),
       body: SafeArea(
         child: _loading
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(child: CircularProgressIndicator())
             : SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildProfileHeader(),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               _buildSection('Account', [
                 _NavItem(
                   icon: Icons.person_outline,
@@ -108,7 +116,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                       _update(_settings!.copyWith(twoFactorEnabled: v)),
                 ),
               ]),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               _buildSection('Preferences', [
                 _NavItem(
                   icon: Icons.notifications_outlined,
@@ -134,7 +142,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   },
                 ),
               ]),
-              const SizedBox(height: 16),
+              SizedBox(height: 16),
               _buildSection('Support', [
                 _NavItem(
                   icon: Icons.help_outline,
@@ -152,11 +160,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   onTap: () {},
                 ),
               ]),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               ElevatedButton.icon(
                 onPressed: () => _logout(context),
-                icon: const Icon(Icons.logout, color: Colors.white),
-                label: const Text(
+                icon: Icon(Icons.logout, color: Colors.white),
+                label: Text(
                   'Log Out',
                   style: TextStyle(
                     color: Colors.white,
@@ -164,15 +172,15 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE53935),
-                  minimumSize: const Size.fromHeight(52),
+                  backgroundColor: Color(0xFFE53935),
+                  minimumSize: Size.fromHeight(52),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
                   elevation: 0,
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
             ],
           ),
         ),
@@ -183,9 +191,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     final user = widget.user;
     final initials = _initials(user.firstName, user.lastName);
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           colors: [Color(0xFF4A90D9), Color(0xFF1A56C4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -204,30 +212,30 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             ),
             child: Text(
               initials,
-              style: const TextStyle(
+              style: TextStyle(
                 color: Colors.white,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '${user.firstName} ${user.lastName}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
+                SizedBox(height: 4),
                 Text(
                   user.email,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white70,
                     fontSize: 13,
                   ),
@@ -246,10 +254,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          padding: EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
               color: Colors.grey,
@@ -267,7 +275,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               for (int i = 0; i < items.length; i++) ...[
                 items[i],
                 if (i < items.length - 1)
-                  const Divider(height: 1, indent: 56, color: Color(0xFFEEEEEE)),
+                  Divider(height: 1, indent: 56, color: Color(0xFFEEEEEE)),
               ],
             ],
           ),
@@ -301,22 +309,22 @@ class _NavItem extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Icon(icon, color: const Color(0xFF4A90D9), size: 22),
-            const SizedBox(width: 18),
+            Icon(icon, color: Color(0xFF4A90D9), size: 22),
+            SizedBox(width: 18),
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 15,
                   color: Color(0xFF1A1A2E),
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-            const Icon(Icons.chevron_right, color: Colors.grey, size: 22),
+            Icon(Icons.chevron_right, color: Colors.grey, size: 22),
           ],
         ),
       ),
@@ -340,15 +348,15 @@ class _ToggleItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF4A90D9), size: 22),
-          const SizedBox(width: 18),
+          Icon(icon, color: Color(0xFF4A90D9), size: 22),
+          SizedBox(width: 18),
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 color: Color(0xFF1A1A2E),
                 fontWeight: FontWeight.w500,
@@ -358,7 +366,7 @@ class _ToggleItem extends StatelessWidget {
           Switch.adaptive(
             value: value,
             onChanged: onChanged,
-            activeColor: const Color(0xFF4A90D9),
+            activeColor: Color(0xFF4A90D9),
           ),
         ],
       ),
@@ -384,15 +392,15 @@ class _DropdownItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF4A90D9), size: 22),
-          const SizedBox(width: 18),
+          Icon(icon, color: Color(0xFF4A90D9), size: 22),
+          SizedBox(width: 18),
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 color: Color(0xFF1A1A2E),
                 fontWeight: FontWeight.w500,
@@ -404,12 +412,12 @@ class _DropdownItem extends StatelessWidget {
               value: value,
               onChanged: onChanged,
               borderRadius: BorderRadius.circular(10),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 color: Color(0xFF1A1A2E),
                 fontWeight: FontWeight.w500,
               ),
-              icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+              icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey),
               items: [
                 for (final opt in options)
                   DropdownMenuItem(value: opt, child: Text(opt)),

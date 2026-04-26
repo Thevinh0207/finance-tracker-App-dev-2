@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c26ea364-c9ce-4e66-b1d7-62f6408daf1d" name="Changes" comment="Finished login page with no style and added forgot password page dart file">
-      <change beforePath="$PROJECT_DIR$/jatvfinancetracker/lib/view/2FAPage.dart" beforeDir="false" afterPath="$PROJECT_DIR$/jatvfinancetracker/lib/view/2FAPage.dart" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/jatvfinancetracker/lib/view/signUpPage.dart" beforeDir="false" afterPath="$PROJECT_DIR$/jatvfinancetracker/lib/view/signUpPage.dart" afterDir="false" />
-    </list>
+    <list default="true" id="c26ea364-c9ce-4e66-b1d7-62f6408daf1d" name="Changes" comment="Finished login page with no style and added forgot password page dart file" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

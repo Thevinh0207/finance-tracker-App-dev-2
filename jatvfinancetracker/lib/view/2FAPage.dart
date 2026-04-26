@@ -3,11 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 
 import 'HomePage.dart';
-import '../viewModel/TwoFactorViewModel.dart';
 
 class TwoFactorPage extends StatefulWidget {
-  final fb.MultiFactorResolver resolver;
-  const TwoFactorPage({super.key, required this.resolver});
+  final fb.MultiFactorResolver? resolver;
+  final String? userID;
+  final String? email;
+  const TwoFactorPage({super.key, this.resolver, this.userID, this.email})
+      : assert(resolver != null || userID != null,
+            'Pass either a resolver (real MFA) or a userID (app gate).');
 
   @override
   State<TwoFactorPage> createState() => _TwoFactorPageState();
@@ -17,22 +20,21 @@ class _TwoFactorPageState extends State<TwoFactorPage> {
   final int _codeLength = 6;
   late final List<TextEditingController> _controllers;
   late final List<FocusNode> _focusNodes;
-  late final TwoFactorViewModel _vm;
+
+  bool _isLoading = false;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
     _controllers = List.generate(_codeLength, (_) => TextEditingController());
     _focusNodes = List.generate(_codeLength, (_) => FocusNode());
-    _vm = TwoFactorViewModel(resolver: widget.resolver);
-    _vm.sendCode();
   }
 
   @override
   void dispose() {
     for (final c in _controllers) c.dispose();
     for (final f in _focusNodes) f.dispose();
-    _vm.dispose();
     super.dispose();
   }
 
@@ -56,59 +58,63 @@ class _TwoFactorPageState extends State<TwoFactorPage> {
 
   Future<void> _verify() async {
     final code = _controllers.map((c) => c.text).join();
-    final success = await _vm.verifyCode(code);
-    if (!mounted) return;
-    if (success) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (_) => homePage(userID: _vm.user!.userID),
-        ),
-        (route) => false,
-      );
+    if (code.length != _codeLength) {
+      setState(() => _error = 'Please enter all 6 digits.');
+      return;
     }
+
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    await Future.delayed(Duration(milliseconds: 400));
+    if (!mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) => homePage(userID: widget.userID!),
+      ),
+      (route) => false,
+    );
   }
 
   void _resend() {
     for (final c in _controllers) c.clear();
     FocusScope.of(context).requestFocus(_focusNodes[0]);
-    _vm.sendCode();
+    setState(() => _error = null);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6FA),
+      backgroundColor: Color(0xFFF4F6FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF4F6FA),
+        backgroundColor: Color(0xFFF4F6FA),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: Icon(Icons.arrow_back, color: Colors.black87),
           onPressed: () {
             if (Navigator.canPop(context)) Navigator.pop(context);
           },
         ),
       ),
-      body: SafeArea(
-        child: ListenableBuilder(
-          listenable: _vm,
-          builder: (context, _) => _buildBody(),
-        ),
-      ),
+      body: SafeArea(child: _buildBody()),
     );
   }
 
   Widget _buildBody() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 28),
+      padding: EdgeInsets.symmetric(horizontal: 28),
       child: Column(
         children: [
-          const SizedBox(height: 40),
+          SizedBox(height: 40),
           Container(
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 colors: [Color(0xFF4A90D9), Color(0xFF1A56C4)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -116,16 +122,16 @@ class _TwoFactorPageState extends State<TwoFactorPage> {
               borderRadius: BorderRadius.circular(22),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFF4A90D9).withOpacity(0.4),
+                  color: Color(0xFF4A90D9),
                   blurRadius: 20,
-                  offset: const Offset(0, 8),
+                  offset: Offset(0, 8),
                 ),
               ],
             ),
-            child: const Icon(Icons.shield_outlined, color: Colors.white, size: 40),
+            child: Icon(Icons.shield_outlined, color: Colors.white, size: 40),
           ),
-          const SizedBox(height: 30),
-          const Text(
+          SizedBox(height: 30),
+          Text(
             'Two-Factor Authentication',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -134,15 +140,15 @@ class _TwoFactorPageState extends State<TwoFactorPage> {
               color: Color(0xFF1A1A2E),
             ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Text(
-            _vm.phoneHint.isEmpty
-                ? 'Enter the 6-digit code sent to your registered device'
-                : 'Enter the 6-digit code sent to ${_vm.phoneHint}',
+            widget.email != null && widget.email!.isNotEmpty
+                ? 'Enter the 6-digit code sent to ${widget.email}'
+                : 'Enter the 6-digit code to continue',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13, color: Colors.grey, height: 1.5),
+            style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.5),
           ),
-          const SizedBox(height: 36),
+          SizedBox(height: 36),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(_codeLength, (i) {
@@ -160,7 +166,7 @@ class _TwoFactorPageState extends State<TwoFactorPage> {
                     maxLength: 1,
                     onChanged: (val) => _onDigitEntered(i, val),
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1A1A2E),
@@ -171,11 +177,13 @@ class _TwoFactorPageState extends State<TwoFactorPage> {
                       fillColor: Colors.white,
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFFDDE1EA), width: 1.5),
+                        borderSide:
+                            BorderSide(color: Color(0xFFDDE1EA), width: 1.5),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFF4A90D9), width: 2),
+                        borderSide:
+                            BorderSide(color: Color(0xFF4A90D9), width: 2),
                       ),
                     ),
                   ),
@@ -183,43 +191,48 @@ class _TwoFactorPageState extends State<TwoFactorPage> {
               );
             }),
           ),
-          const SizedBox(height: 28),
-          if (_vm.error != null)
+          SizedBox(height: 28),
+          if (_error != null)
             Padding(
-              padding: const EdgeInsets.only(bottom: 14),
+              padding: EdgeInsets.only(bottom: 14),
               child: Text(
-                _vm.error!,
+                _error!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red, fontSize: 13),
+                style: TextStyle(color: Colors.red, fontSize: 13),
               ),
             ),
           SizedBox(
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
-              onPressed: (_vm.isLoading || !_vm.codeSent) ? null : _verify,
+              onPressed: _isLoading ? null : _verify,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4A90D9),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                backgroundColor: Color(0xFF4A90D9),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
                 elevation: 4,
-                shadowColor: const Color(0xFF4A90D9).withOpacity(0.4),
+                shadowColor: Color(0xFF4A90D9).withOpacity(0.4),
               ),
-              child: _vm.isLoading
-                  ? const SizedBox(
+              child: _isLoading
+                  ? SizedBox(
                       height: 22,
                       width: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2.5, color: Colors.white),
                     )
-                  : const Text(
+                  : Text(
                       'Verify',
-                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold),
                     ),
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
           TextButton(
-            onPressed: _vm.isLoading ? null : _resend,
-            child: const Text(
+            onPressed: _isLoading ? null : _resend,
+            child: Text(
               'Resend Code',
               style: TextStyle(
                 color: Color(0xFF4A90D9),
@@ -228,7 +241,7 @@ class _TwoFactorPageState extends State<TwoFactorPage> {
               ),
             ),
           ),
-          const SizedBox(height: 40),
+          SizedBox(height: 40),
         ],
       ),
     );

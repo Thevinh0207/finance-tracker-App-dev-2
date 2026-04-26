@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'ProfileSettingsPage.dart';
+import 'widgets/AppBottomNavBar.dart';
+import '../Model/Transaction.dart';
+import '../helper/TransactionType.dart';
+import '../util/AppRouteObserver.dart';
 import '../viewModel/HomePageViewModel.dart';
 
 class homePage extends StatelessWidget {
@@ -12,6 +16,7 @@ class homePage extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: 'Roboto'),
+      navigatorObservers: [appRouteObserver],
       home: mainDashboard(userID: userID),
     );
   }
@@ -25,10 +30,10 @@ class mainDashboard extends StatefulWidget {
   State<mainDashboard> createState() => _mainDashboardState();
 }
 
-class _mainDashboardState extends State<mainDashboard> {
-  int _selectedIndex = 0;
+class _mainDashboardState extends State<mainDashboard> with RouteAware {
   bool _balanceVisible = true;
   final HomePageViewModel _vm = HomePageViewModel();
+  PageRoute? _subscribedRoute;
 
   @override
   void initState() {
@@ -37,7 +42,27 @@ class _mainDashboardState extends State<mainDashboard> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute && route != _subscribedRoute) {
+      if (_subscribedRoute != null) {
+        appRouteObserver.unsubscribe(this);
+      }
+      appRouteObserver.subscribe(this, route);
+      _subscribedRoute = route;
+    }
+  }
+
+  @override
+  void didPopNext() {
+    // Returned to HomePage from a pushed route — refresh data.
+    _vm.refresh(widget.userID);
+  }
+
+  @override
   void dispose() {
+    appRouteObserver.unsubscribe(this);
     _vm.dispose();
     super.dispose();
   }
@@ -85,7 +110,7 @@ class _mainDashboardState extends State<mainDashboard> {
                     ),
                   ),
                 ),
-                _buildBottomNav(),
+                AppBottomNavBar(currentIndex: 0, userID: widget.userID),
               ],
             );
           },
@@ -288,10 +313,171 @@ class _mainDashboardState extends State<mainDashboard> {
               ),
             ],
           ),
-           SizedBox(height: 16),
+          SizedBox(height: 24),
+          _buildRecentTransactions(),
+          SizedBox(height: 16),
         ],
       ),
     );
+  }
+
+  Widget _buildRecentTransactions() {
+    final sorted = [..._vm.transactions]
+      ..sort((a, b) => b.date.compareTo(a.date));
+    final recent = sorted.take(5).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Recent Transactions',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1A2E),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {},
+              child: Text(
+                'See All',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF4A90D9),
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 16),
+        if (recent.isEmpty)
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                'No transactions yet',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+          )
+        else
+          Column(
+            children: [
+              for (int i = 0; i < recent.length; i++) ...[
+                if (i > 0) SizedBox(height: 14),
+                _buildTransactionTile(recent[i]),
+              ],
+            ],
+          ),
+      ],
+    );
+  }
+
+  Widget _buildTransactionTile(Transaction t) {
+    final isIncome = t.type == TransactionType.income;
+    final amountText =
+        '${isIncome ? '+' : '-'}\$${_formatAmount(t.amount)}';
+    final amountColor =
+        isIncome ? Color(0xFF4CAF50) : Color(0xFF1A1A2E);
+    final typeLabel = isIncome
+        ? 'Income'
+        : t.type == TransactionType.expense
+            ? 'Expense'
+            : 'Transfer';
+
+    return Row(
+      children: [
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            color: Color(0xFFF1F3F8),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(
+            _iconForTransaction(t),
+            color: Color(0xFF4A90D9),
+            size: 22,
+          ),
+        ),
+        SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                t.transactionName,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF1A1A2E),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              SizedBox(height: 2),
+              Text(
+                _relativeDate(t.date),
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              amountText,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: amountColor,
+              ),
+            ),
+            SizedBox(height: 2),
+            Text(
+              typeLabel,
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  IconData _iconForTransaction(Transaction t) {
+    if (t.type == TransactionType.income) return Icons.attach_money;
+    if (t.type == TransactionType.transfer) return Icons.swap_horiz;
+    final name = t.transactionName.toLowerCase();
+    if (name.contains('grocery') || name.contains('food') || name.contains('restaurant')) {
+      return Icons.shopping_cart_outlined;
+    }
+    if (name.contains('electric') || name.contains('utility') || name.contains('bill')) {
+      return Icons.bolt_outlined;
+    }
+    if (name.contains('rent') || name.contains('home')) return Icons.home_outlined;
+    if (name.contains('gas') || name.contains('fuel') || name.contains('car')) {
+      return Icons.local_gas_station_outlined;
+    }
+    return Icons.receipt_long_outlined;
+  }
+
+  String _relativeDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final that = DateTime(date.year, date.month, date.day);
+    final diff = today.difference(that).inDays;
+    if (diff == 0) return 'Today';
+    if (diff == 1) return 'Yesterday';
+    if (diff > 1 && diff < 7) return '$diff days ago';
+    return '${date.month}/${date.day}/${date.year}';
   }
 
   Widget _buildDonutChart() {
@@ -357,53 +543,6 @@ class _mainDashboardState extends State<mainDashboard> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildBottomNav() {
-    final items = [
-      {'icon': Icons.home_rounded, 'label': 'Home'},
-      {'icon': Icons.history, 'label': 'History'},
-      {'icon': Icons.attach_money, 'label': 'Money'},
-      {'icon': Icons.pie_chart_outline, 'label': 'Budget'},
-      {'icon': Icons.people_outline, 'label': 'Family'},
-      {'icon': Icons.track_changes_outlined, 'label': 'Goals'},
-    ];
-
-    return Container(
-      decoration:  BoxDecoration(
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
-      ),
-      padding:  EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(items.length, (i) {
-          final selected = _selectedIndex == i;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedIndex = i),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  items[i]['icon'] as IconData,
-                  color: selected ?  Color(0xFF4A90D9) : Colors.grey,
-                  size: 24,
-                ),
-                 SizedBox(height: 3),
-                Text(
-                  items[i]['label'] as String,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: selected ?  Color(0xFF4A90D9) : Colors.grey,
-                    fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
       ),
     );
   }
