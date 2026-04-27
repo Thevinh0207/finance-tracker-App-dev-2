@@ -13,12 +13,7 @@ class homePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(fontFamily: 'Roboto'),
-      navigatorObservers: [appRouteObserver],
-      home: mainDashboard(userID: userID),
-    );
+    return mainDashboard(userID: userID);
   }
 }
 

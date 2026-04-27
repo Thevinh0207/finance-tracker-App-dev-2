@@ -2,11 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../TransactionHistoryPage.dart';
 
-/// Shared bottom navigation bar used across all main pages.
-///
-/// Pass [currentIndex] (0=Home, 1=History, 2=Money, 3=Budget, 4=Family, 5=Goals)
-/// and [userID]. Tapping an item routes to the matching page; tapping the
-/// current item is a no-op.
 class AppBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final String userID;
