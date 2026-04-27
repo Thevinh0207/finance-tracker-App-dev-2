@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../MoneyFlowPage.dart';
 import '../TransactionHistoryPage.dart';
 
 class AppBottomNavBar extends StatelessWidget {
@@ -46,8 +47,25 @@ class AppBottomNavBar extends StatelessWidget {
           );
         }
         break;
+      case 2:
+        if (currentIndex == 0) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MoneyFlowPage(userID: userID),
+            ),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => MoneyFlowPage(userID: userID),
+            ),
+          );
+        }
+        break;
       default:
-        // Money / Budget / Family / Goals — not yet implemented.
+        // Budget / Family / Goals — not yet implemented.
         break;
     }
   }
