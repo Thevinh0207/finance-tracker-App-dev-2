@@ -1,5 +1,9 @@
 enum GoalType {
   saving,
   spending,
-  debt
+  debt,
+  purchase,
+  retirement,
+  emergency,
+  investment,
 }

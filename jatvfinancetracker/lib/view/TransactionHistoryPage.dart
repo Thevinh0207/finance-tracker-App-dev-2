@@ -661,6 +661,7 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
 
   TransactionType _type = TransactionType.expense;
   String? _categoryID;
+  String? _goalID;
   DateTime _date = DateTime.now();
   String? _localError;
 
@@ -717,6 +718,7 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
       newCategoryName:
           _categoryID == null ? _newCategoryController.text : null,
       note: _noteController.text,
+      goalID: _goalID,
     );
 
     if (!mounted) return;
@@ -842,6 +844,28 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
               ),
             ),
             SizedBox(height: 14),
+            if (widget.vm.activeGoals.isNotEmpty &&
+                _type != TransactionType.expense) ...[
+              _label('Apply to Goal (optional)'),
+              DropdownButtonFormField<String?>(
+                value: _goalID,
+                decoration: _decoration('None — no goal selected'),
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('None'),
+                  ),
+                  ...widget.vm.activeGoals.map(
+                    (g) => DropdownMenuItem<String?>(
+                      value: g.goalID,
+                      child: Text(g.goalName),
+                    ),
+                  ),
+                ],
+                onChanged: (v) => setState(() => _goalID = v),
+              ),
+              SizedBox(height: 14),
+            ],
             _label('Note (optional)'),
             TextFormField(
               controller: _noteController,
@@ -909,6 +933,7 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
               onTap: () => setState(() {
                 _type = entry.$1;
                 _categoryID = null;
+                if (_type == TransactionType.expense) _goalID = null;
               }),
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 10),

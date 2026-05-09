@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../BudgetTrackerPage.dart';
+import '../FamilyPage.dart';
+import '../GoalsPage.dart';
 import '../MoneyFlowPage.dart';
 import '../TransactionHistoryPage.dart';
 
@@ -82,8 +84,41 @@ class AppBottomNavBar extends StatelessWidget {
           );
         }
         break;
+      case 4:
+        if (currentIndex == 0) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => FamilyPage(userID: userID),
+            ),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => FamilyPage(userID: userID),
+            ),
+          );
+        }
+        break;
+      case 5:
+        if (currentIndex == 0) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => GoalsPage(userID: userID),
+            ),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => GoalsPage(userID: userID),
+            ),
+          );
+        }
+        break;
       default:
-        // Family / Goals — not yet implemented.
         break;
     }
   }

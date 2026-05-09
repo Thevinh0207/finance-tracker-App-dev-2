@@ -8,6 +8,7 @@ class Transaction {
   final TransactionType type;
   final String categoryID;
   final String? budgetID;
+  final String? goalID;
   final double amount;
   final DateTime date;
   final String? note;
@@ -19,6 +20,7 @@ class Transaction {
     required this.type,
     required this.categoryID,
     this.budgetID,
+    this.goalID,
     required this.amount,
     required this.date,
     this.note,
@@ -32,6 +34,7 @@ class Transaction {
       'type': type.name,
       'categoryID': categoryID,
       'budgetID': budgetID,
+      'goalID': goalID,
       'amount': amount,
       'date': Timestamp.fromDate(date),
       'note': note,
@@ -46,6 +49,7 @@ class Transaction {
       type: TransactionType.values.byName(map['type'] as String),
       categoryID: map['categoryID'] as String,
       budgetID: map['budgetID'] as String?,
+      goalID: map['goalID'] as String?,
       amount: (map['amount'] as num).toDouble(),
       date: (map['date'] as Timestamp).toDate(),
       note: map['note'] as String?,
@@ -57,6 +61,7 @@ class Transaction {
     TransactionType? type,
     String? categoryID,
     String? budgetID,
+    String? goalID,
     double? amount,
     DateTime? date,
     String? note,
@@ -68,6 +73,7 @@ class Transaction {
       type: type ?? this.type,
       categoryID: categoryID ?? this.categoryID,
       budgetID: budgetID ?? this.budgetID,
+      goalID: goalID ?? this.goalID,
       amount: amount ?? this.amount,
       date: date ?? this.date,
       note: note ?? this.note,

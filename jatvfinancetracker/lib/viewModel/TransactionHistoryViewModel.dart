@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 
+import '../Model/Goal.dart';
 import '../Model/Transaction.dart';
 import '../Model/Categorie.dart';
 import '../helper/TransactionType.dart';
+import '../Repository/GoalRepository.dart';
 import '../Repository/TransactionRepository.dart';
 import '../Repository/CategorieRepository.dart';
 
@@ -15,20 +17,25 @@ enum DateRangePreset { allTime, thisMonth, lastMonth, last7Days, last30Days }
 class TransactionHistoryViewModel extends ChangeNotifier {
   final TransactionRepository _tRepo;
   final CategorieRepository _cRepo;
+  final GoalRepository _gRepo;
 
   TransactionHistoryViewModel({
     TransactionRepository? tRepo,
     CategorieRepository? cRepo,
+    GoalRepository? gRepo,
   })  : _tRepo = tRepo ?? TransactionRepository(),
-        _cRepo = cRepo ?? CategorieRepository();
+        _cRepo = cRepo ?? CategorieRepository(),
+        _gRepo = gRepo ?? GoalRepository();
 
   List<Transaction> _all = <Transaction>[];
   List<Categorie> _categories = <Categorie>[];
+  List<Goal> _activeGoals = <Goal>[];
   bool _isSaving = false;
   bool _isLoading = false;
   String? _error;
 
   List<Categorie> get categories => _categories;
+  List<Goal> get activeGoals => List.unmodifiable(_activeGoals);
   bool get isSaving => _isSaving;
 
   List<Categorie> categoriesForType(TransactionType type) {
@@ -161,9 +168,11 @@ class TransactionHistoryViewModel extends ChangeNotifier {
       final results = await Future.wait([
         _tRepo.getByUser(userID),
         _cRepo.getByUser(userID),
+        _gRepo.getActive(userID),
       ]);
       _all = results[0] as List<Transaction>;
       _categories = results[1] as List<Categorie>;
+      _activeGoals = results[2] as List<Goal>;
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -183,6 +192,7 @@ class TransactionHistoryViewModel extends ChangeNotifier {
     String? categoryID,
     String? newCategoryName,
     String? note,
+    String? goalID,
   }) async {
     _isSaving = true;
     _error = null;
@@ -213,8 +223,18 @@ class TransactionHistoryViewModel extends ChangeNotifier {
         amount: amount,
         date: date,
         note: (note == null || note.trim().isEmpty) ? null : note.trim(),
+        goalID: goalID,
       );
       await _tRepo.create(t);
+
+      // Update linked goal progress
+      if (goalID != null && goalID.isNotEmpty) {
+        final goal = await _gRepo.getById(goalID);
+        if (goal != null) {
+          await _gRepo.updateProgress(goalID, goal.currentAmount + amount);
+        }
+      }
+
       await load(userID);
       return true;
     } catch (e) {

@@ -12,6 +12,7 @@ class Goal {
   final DateTime startDate;
   final DateTime targetDate;
   final String? note;
+  final double? monthlyContribution;
 
   Goal({
     required this.goalID,
@@ -23,6 +24,7 @@ class Goal {
     required this.startDate,
     required this.targetDate,
     this.note,
+    this.monthlyContribution,
   });
 
   double get getProgress =>
@@ -41,6 +43,7 @@ class Goal {
       'startDate': Timestamp.fromDate(startDate),
       'targetDate': Timestamp.fromDate(targetDate),
       'note': note,
+      'monthlyContribution': monthlyContribution,
     };
   }
 
@@ -55,6 +58,9 @@ class Goal {
       startDate: (map['startDate'] as Timestamp).toDate(),
       targetDate: (map['targetDate'] as Timestamp).toDate(),
       note: map['note'] as String?,
+      monthlyContribution: map['monthlyContribution'] != null
+          ? (map['monthlyContribution'] as num).toDouble()
+          : null,
     );
   }
 
@@ -65,6 +71,7 @@ class Goal {
     GoalType? goalType,
     DateTime? targetDate,
     String? note,
+    double? monthlyContribution,
   }) {
     return Goal(
       goalID: goalID,
@@ -76,6 +83,7 @@ class Goal {
       startDate: startDate,
       targetDate: targetDate ?? this.targetDate,
       note: note ?? this.note,
+      monthlyContribution: monthlyContribution ?? this.monthlyContribution,
     );
   }
 }
