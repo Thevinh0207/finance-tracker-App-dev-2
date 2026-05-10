@@ -5,6 +5,11 @@ import '../helper/GoalType.dart';
 import '../viewModel/GoalsViewModel.dart';
 import 'widgets/AppBottomNavBar.dart';
 
+typedef UpdateProgressFn = Future<void> Function(
+  double newAmount, {
+  ProgressDecreaseIntent? decreaseIntent,
+});
+
 class GoalsPage extends StatefulWidget {
   final String userID;
   const GoalsPage({super.key, required this.userID});
@@ -718,8 +723,12 @@ class _GoalsPageState extends State<GoalsPage> {
       backgroundColor: Colors.transparent,
       builder: (_) => _UpdateProgressSheet(
         goal: goal,
-        onUpdate: (amount) async {
-          await _vm.updateProgress(goal.goalID, amount);
+        onUpdate: (amount, {decreaseIntent}) async {
+          await _vm.updateProgress(
+            goal.goalID,
+            amount,
+            decreaseIntent: decreaseIntent,
+          );
         },
       ),
     );
@@ -991,7 +1000,7 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
 
 class _UpdateProgressSheet extends StatefulWidget {
   final Goal goal;
-  final Future<void> Function(double amount) onUpdate;
+  final UpdateProgressFn onUpdate;
 
   const _UpdateProgressSheet({required this.goal, required this.onUpdate});
 
@@ -1021,9 +1030,65 @@ class _UpdateProgressSheetState extends State<_UpdateProgressSheet> {
   Future<void> _submit() async {
     final amount = double.tryParse(_ctrl.text.trim());
     if (amount == null || amount < 0) return;
+
+    final delta = amount - widget.goal.currentAmount;
+
+    // Decreasing the goal amount → ask the user what they meant.
+    ProgressDecreaseIntent? intent;
+    if (delta < 0) {
+      intent = await _askDecreaseIntent(delta.abs());
+      if (intent == null) {
+        // User cancelled — don't save anything.
+        return;
+      }
+    }
+
     setState(() => _saving = true);
-    await widget.onUpdate(amount);
+    await widget.onUpdate(amount, decreaseIntent: intent);
     if (mounted) Navigator.pop(context);
+  }
+
+  Future<ProgressDecreaseIntent?> _askDecreaseIntent(double absDelta) async {
+    final theme = Theme.of(context);
+    return showDialog<ProgressDecreaseIntent>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: theme.cardColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Text(
+          'Decreasing goal amount',
+          style: TextStyle(color: theme.colorScheme.onSurface),
+        ),
+        content: Text(
+          "You're reducing ${widget.goal.goalName} by \$${absDelta.toStringAsFixed(0)}. "
+          'Is this a withdrawal, or are you correcting a mistake?',
+          style: TextStyle(color: theme.colorScheme.onSurface),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(ctx, ProgressDecreaseIntent.correction),
+            child: const Text('Correction'),
+          ),
+          ElevatedButton(
+            onPressed: () =>
+                Navigator.pop(ctx, ProgressDecreaseIntent.withdrawal),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _gradStart,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Withdrawal'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

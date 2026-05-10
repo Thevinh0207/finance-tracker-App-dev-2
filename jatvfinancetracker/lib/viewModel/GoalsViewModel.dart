@@ -1,19 +1,37 @@
 import 'package:flutter/material.dart';
 
+import '../Model/Categorie.dart';
 import '../Model/Goal.dart';
+import '../Model/Transaction.dart';
+import '../Repository/CategorieRepository.dart';
 import '../Repository/GoalRepository.dart';
+import '../Repository/TransactionRepository.dart';
 import '../helper/GoalType.dart';
+import '../helper/TransactionType.dart';
+
+/// Intent for a *decrease* in goal amount.
+///   - [withdrawal] → log a transaction reflecting the money coming back out.
+///   - [correction] → silent update (typo fix, stale value, etc.).
+enum ProgressDecreaseIntent { withdrawal, correction }
 
 class GoalsViewModel extends ChangeNotifier {
   final GoalRepository _goalRepo;
+  final TransactionRepository _txRepo;
+  final CategorieRepository _catRepo;
   final String userID;
 
   List<Goal> _goals = [];
   bool _isLoading = false;
   String? _error;
 
-  GoalsViewModel({required this.userID, GoalRepository? goalRepository})
-      : _goalRepo = goalRepository ?? GoalRepository();
+  GoalsViewModel({
+    required this.userID,
+    GoalRepository? goalRepository,
+    TransactionRepository? transactionRepository,
+    CategorieRepository? categoryRepository,
+  })  : _goalRepo = goalRepository ?? GoalRepository(),
+        _txRepo = transactionRepository ?? TransactionRepository(),
+        _catRepo = categoryRepository ?? CategorieRepository();
 
   List<Goal> get goals => List.unmodifiable(_goals);
   List<Goal> get activeGoals =>
@@ -105,14 +123,101 @@ class GoalsViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> updateProgress(String goalID, double newAmount) async {
+  /// Update a goal's progress to [newAmount].
+  ///
+  /// - **delta > 0** → automatically logs a "Contribution to X" transaction
+  ///   (type: transfer, category: Savings).
+  /// - **delta < 0** → caller must pass [decreaseIntent]:
+  ///     - [ProgressDecreaseIntent.withdrawal] → logs a "Withdrawal from X"
+  ///       transaction (type: transfer, category: Savings) with the absolute
+  ///       value of the delta as a positive amount.
+  ///     - [ProgressDecreaseIntent.correction] → silent update, no
+  ///       transaction is written.
+  /// - **delta == 0** → no-op.
+  Future<void> updateProgress(
+    String goalID,
+    double newAmount, {
+    ProgressDecreaseIntent? decreaseIntent,
+  }) async {
     try {
+      final goal = _goals.firstWhere(
+        (g) => g.goalID == goalID,
+        orElse: () => throw StateError('Goal not found: $goalID'),
+      );
+      final delta = newAmount - goal.currentAmount;
+
+      if (delta > 0) {
+        // Contribution — always logged.
+        final savingsCategoryID = await _ensureSavingsCategory();
+        final tx = Transaction(
+          transactionID: '',
+          userID: userID,
+          transactionName: 'Contribution to ${goal.goalName}',
+          type: TransactionType.transfer,
+          categoryID: savingsCategoryID,
+          goalID: goalID,
+          amount: delta,
+          date: DateTime.now(),
+          note: null,
+        );
+        await _txRepo.create(tx);
+      } else if (delta < 0) {
+        if (decreaseIntent == null) {
+          throw ArgumentError(
+              'decreaseIntent is required when newAmount is less than the goal\'s current amount.');
+        }
+        if (decreaseIntent == ProgressDecreaseIntent.withdrawal) {
+          // Log a positive-amount transfer in the Savings category.
+          // Direction is conveyed by the transaction name, not by the sign.
+          final savingsCategoryID = await _ensureSavingsCategory();
+          final tx = Transaction(
+            transactionID: '',
+            userID: userID,
+            transactionName: 'Withdrawal from ${goal.goalName}',
+            type: TransactionType.transfer,
+            categoryID: savingsCategoryID,
+            goalID: goalID,
+            amount: -delta, // delta is negative; flip to positive for storage.
+            date: DateTime.now(),
+            note: null,
+          );
+          await _txRepo.create(tx);
+        }
+        // ProgressDecreaseIntent.correction → no transaction written.
+      }
+      // delta == 0 → no transaction either way.
+
       await _goalRepo.updateProgress(goalID, newAmount);
       await load();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
     }
+  }
+
+  /// Returns the categoryID of the user's "Savings" transfer category,
+  /// creating it on the fly the first time it's needed.
+  Future<String> _ensureSavingsCategory() async {
+    final transferCats =
+        await _catRepo.getByUserAndType(userID, TransactionType.transfer);
+    final existing = transferCats.firstWhere(
+      (c) => c.categoryName.toLowerCase() == 'savings',
+      orElse: () => Categorie(
+        categoryID: '',
+        userID: userID,
+        categoryName: '',
+        type: TransactionType.transfer,
+      ),
+    );
+    if (existing.categoryID.isNotEmpty) return existing.categoryID;
+
+    final created = Categorie(
+      categoryID: '',
+      userID: userID,
+      categoryName: 'Savings',
+      type: TransactionType.transfer,
+    );
+    return _catRepo.create(created);
   }
 
   Future<void> deleteGoal(String goalID) async {
