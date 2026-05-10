@@ -169,6 +169,7 @@ class _signUpCardState extends State<signUpCard> {
                     ? Icons.visibility_off
                     : Icons.visibility),
                 onPressed: _vm.togglePasswordVisibility,
+                splashRadius: 20,
               ),
             ),
             SizedBox(height: 20),
@@ -183,6 +184,7 @@ class _signUpCardState extends State<signUpCard> {
                     ? Icons.visibility_off
                     : Icons.visibility),
                 onPressed: _vm.toggleConfirmPasswordVisibility,
+                splashRadius: 20,
               ),
             ),
             SizedBox(height: 16),

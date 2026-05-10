@@ -32,9 +32,12 @@ class _AddBudgetPageState extends State<AddBudgetPage> {
   String? _saveError;
 
   static const _primaryBlue = Color(0xFF4A90D9);
-  static const _darkText = Color(0xFF1A1A2E);
   static const _greyText = Color(0xFF888888);
   static const _dangerRed = Color(0xFFE53935);
+
+  Color get _darkText => Theme.of(context).colorScheme.onSurface;
+  Color get _cardBg => Theme.of(context).cardColor;
+  Color get _pageBg => Theme.of(context).scaffoldBackgroundColor;
 
   @override
   void initState() {
@@ -93,9 +96,9 @@ class _AddBudgetPageState extends State<AddBudgetPage> {
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFF5F7FA),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: _pageBg,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
           top: false,
@@ -118,7 +121,7 @@ class _AddBudgetPageState extends State<AddBudgetPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
+                  Text(
                     'New Budget',
                     style: TextStyle(
                       fontSize: 22,
@@ -221,7 +224,7 @@ class _AddBudgetPageState extends State<AddBudgetPage> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Cancel',
                             style: TextStyle(color: _darkText),
                           ),
@@ -264,7 +267,7 @@ class _AddBudgetPageState extends State<AddBudgetPage> {
 
   Widget _label(String text) => Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
           color: _darkText,
@@ -284,18 +287,18 @@ class _AddBudgetPageState extends State<AddBudgetPage> {
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       validator: validator,
-      style: const TextStyle(fontSize: 15, color: _darkText),
+      style: TextStyle(fontSize: 15, color: _darkText),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: _greyText, fontSize: 14),
         prefixText: prefix,
-        prefixStyle: const TextStyle(
+        prefixStyle: TextStyle(
           color: _darkText,
           fontSize: 15,
           fontWeight: FontWeight.w600,
         ),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: _cardBg,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
@@ -328,7 +331,7 @@ class _AddBudgetPageState extends State<AddBudgetPage> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: _cardBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey.shade200),
         ),
@@ -351,7 +354,7 @@ class _AddBudgetPageState extends State<AddBudgetPage> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _cardBg,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade200),
       ),
@@ -360,6 +363,7 @@ class _AddBudgetPageState extends State<AddBudgetPage> {
         child: DropdownButtonFormField<String?>(
           value: dropdownValue,
           isExpanded: true,
+          dropdownColor: _cardBg,
           decoration: const InputDecoration(
             border: InputBorder.none,
             contentPadding: EdgeInsets.symmetric(vertical: 4),
@@ -374,7 +378,7 @@ class _AddBudgetPageState extends State<AddBudgetPage> {
                 value: c.id,
                 child: Text(
                   c.name,
-                  style: const TextStyle(fontSize: 15, color: _darkText),
+                  style: TextStyle(fontSize: 15, color: _darkText),
                 ),
               ),
             ),
@@ -421,7 +425,7 @@ class _AddBudgetPageState extends State<AddBudgetPage> {
                 duration: const Duration(milliseconds: 180),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: selected ? _primaryBlue : Colors.white,
+                  color: selected ? _primaryBlue : _cardBg,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: selected ? _primaryBlue : Colors.grey.shade300,

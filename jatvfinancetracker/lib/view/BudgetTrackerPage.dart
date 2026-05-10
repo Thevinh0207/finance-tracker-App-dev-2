@@ -138,10 +138,10 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
               _buildHeader(),
               Expanded(
                 child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF5F7FA),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
                     borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(28)),
+                        const BorderRadius.vertical(top: Radius.circular(28)),
                   ),
                   child: _vm.isLoading
                       ? const Center(
@@ -350,12 +350,12 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
+        Text(
           'Budget Categories',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: _darkText,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         if (_vm.progressList.length > 3)
@@ -385,9 +385,9 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
         maxChildSize: 0.95,
         expand: false,
         builder: (_, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: Color(0xFFF5F7FA),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
           child: Column(
             children: [
@@ -400,8 +400,8 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(20, 16, 20, 12),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -409,7 +409,7 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: _darkText,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
@@ -439,7 +439,7 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -461,10 +461,13 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
                 color: _primaryBlue, size: 36),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'No budgets created yet',
             style: TextStyle(
-                fontSize: 16, fontWeight: FontWeight.bold, color: _darkText),
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -506,7 +509,7 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
       onLongPress: () => _confirmDelete(p),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -551,10 +554,10 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
                           children: [
                             Text(
                               p.budget.budgetName,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: _darkText,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -579,10 +582,10 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
                               TextStyle(fontSize: 13, color: _greyText)),
                       RichText(
                         text: TextSpan(
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: _darkText,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                           children: [
                             TextSpan(text: '\$${_fmt(p.spent)} '),

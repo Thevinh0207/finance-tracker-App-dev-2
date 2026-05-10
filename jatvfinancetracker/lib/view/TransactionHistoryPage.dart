@@ -33,7 +33,6 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF4F6FA),
       body: ListenableBuilder(
         listenable: _vm,
         builder: (context, _) => Column(
@@ -97,7 +96,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -170,7 +169,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
       child: Container(
         padding: EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
@@ -218,8 +217,13 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
     required bool active,
     required VoidCallback onTap,
   }) {
-    final fg = active ? Color(0xFF4A90D9) : Color(0xFF1A1A2E);
-    final bg = active ? Color(0xFFE8F1FB) : Colors.transparent;
+    final theme = Theme.of(context);
+    final fg = active ? Color(0xFF4A90D9) : theme.colorScheme.onSurface;
+    final bg = active
+        ? (theme.brightness == Brightness.dark
+            ? Color(0xFF1A2A3D)
+            : Color(0xFFE8F1FB))
+        : Colors.transparent;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -280,7 +284,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -386,16 +390,17 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
   }
 
   Widget _buildTransactionCard(Transaction t) {
+    final theme = Theme.of(context);
     final isIncome = t.type == TransactionType.income;
     final amountText =
         '${isIncome ? '+' : '-'}\$${_formatAmount(t.amount)}';
     final amountColor =
-        isIncome ? Color(0xFF4CAF50) : Color(0xFF1A1A2E);
+        isIncome ? Color(0xFF4CAF50) : theme.colorScheme.onSurface;
 
     return Container(
       padding: EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -431,7 +436,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A2E),
+                    color: theme.colorScheme.onSurface,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -513,11 +518,11 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
   }) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
+      builder: (sheetContext) {
         return SafeArea(
           child: Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
@@ -532,19 +537,24 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1A2E),
+                      color: Theme.of(sheetContext).colorScheme.onSurface,
                     ),
                   ),
                 ),
                 for (final entry in options.entries)
                   ListTile(
-                    title: Text(entry.value),
+                    title: Text(
+                      entry.value,
+                      style: TextStyle(
+                        color: Theme.of(sheetContext).colorScheme.onSurface,
+                      ),
+                    ),
                     trailing: entry.key == current
                         ? Icon(Icons.check, color: Color(0xFF4A90D9))
                         : null,
                     onTap: () {
                       onSelect(entry.key);
-                      Navigator.pop(context);
+                      Navigator.pop(sheetContext);
                     },
                   ),
               ],
@@ -758,7 +768,7 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1A2E),
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             SizedBox(height: 16),
@@ -826,7 +836,7 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
                 padding: EdgeInsets.symmetric(
                     horizontal: 14, vertical: 14),
                 decoration: BoxDecoration(
-                  color: Color(0xFFF4F6FA),
+                  color: Theme.of(context).scaffoldBackgroundColor,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -837,7 +847,8 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
                     Text(
                       _formatDate(_date),
                       style: TextStyle(
-                          fontSize: 14, color: Color(0xFF1A1A2E)),
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onSurface),
                     ),
                   ],
                 ),
@@ -922,7 +933,7 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
     return Container(
       padding: EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Color(0xFFF4F6FA),
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -945,7 +956,9 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
                   child: Text(
                     entry.$2,
                     style: TextStyle(
-                      color: selected ? Colors.white : Color(0xFF1A1A2E),
+                      color: selected
+                          ? Colors.white
+                          : Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),
@@ -966,17 +979,20 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF1A1A2E),
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       );
 
   InputDecoration _decoration(String hint, {String? prefix}) {
+    final theme = Theme.of(context);
     return InputDecoration(
       hintText: hint,
+      hintStyle: TextStyle(color: Colors.grey),
       prefixText: prefix,
+      prefixStyle: TextStyle(color: theme.colorScheme.onSurface),
       filled: true,
-      fillColor: Color(0xFFF4F6FA),
+      fillColor: theme.scaffoldBackgroundColor,
       contentPadding:
           EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       border: OutlineInputBorder(

@@ -159,6 +159,7 @@ class _loginCardState extends State<loginCard> {
                     ? Icons.visibility_off
                     : Icons.visibility),
                 onPressed: _vm.togglePasswordVisibility,
+                splashRadius: 20,
               ),
             ),
             SizedBox(height: 10),

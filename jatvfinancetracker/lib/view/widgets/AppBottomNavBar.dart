@@ -127,7 +127,7 @@ class AppBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
       ),
       padding: EdgeInsets.symmetric(vertical: 8),

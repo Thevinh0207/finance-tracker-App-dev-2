@@ -155,10 +155,10 @@ class _FamilyPageState extends State<FamilyPage> {
                 _buildHeader(),
                 Expanded(
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF5F7FA),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
                       borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(28)),
+                          const BorderRadius.vertical(top: Radius.circular(28)),
                     ),
                     child: _vm.isLoading
                         ? const Center(
@@ -339,12 +339,13 @@ class _FamilyPageState extends State<FamilyPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Family Members',
               style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: _darkText),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             ElevatedButton.icon(
               onPressed: _showAddMemberSheet,
@@ -384,7 +385,7 @@ class _FamilyPageState extends State<FamilyPage> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -422,10 +423,11 @@ class _FamilyPageState extends State<FamilyPage> {
                         children: [
                           Text(
                             member.displayName,
-                            style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: _darkText),
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                           ),
                           if (member.isAdmin) ...[
                             const SizedBox(width: 5),
@@ -447,10 +449,11 @@ class _FamilyPageState extends State<FamilyPage> {
                   children: [
                     Text(
                       '\$${_fmt(member.spent)}',
-                      style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: _darkText),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
                     Text(
                       'of \$${_fmt(member.budgetAllocation)}',
@@ -486,12 +489,13 @@ class _FamilyPageState extends State<FamilyPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               'Shared Expenses',
               style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: _darkText),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
             GestureDetector(
               onTap: _showAddExpenseSheet,
@@ -534,7 +538,7 @@ class _FamilyPageState extends State<FamilyPage> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -561,10 +565,11 @@ class _FamilyPageState extends State<FamilyPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(expense.name,
-                      style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: _darkText)),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      )),
                   Text('Paid by ${expense.paidByName}',
                       style: const TextStyle(
                           fontSize: 12, color: _greyText)),
@@ -579,10 +584,11 @@ class _FamilyPageState extends State<FamilyPage> {
               children: [
                 Text(
                   '\$${_fmt(expense.amount)}',
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: _darkText),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
                 Text(
                   '\$${perPerson.toStringAsFixed(2)}/person',
@@ -658,11 +664,12 @@ class _FamilyPageState extends State<FamilyPage> {
                   color: _gradStart, size: 48),
             ),
             const SizedBox(height: 20),
-            const Text('Create Your Family Plan',
+            Text('Create Your Family Plan',
                 style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: _darkText)),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.onSurface,
+                )),
             const SizedBox(height: 8),
             const Text(
               'Track budgets and shared expenses\nwith your family members.',
@@ -697,7 +704,7 @@ class _FamilyPageState extends State<FamilyPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16)),
       child: Text(text,
           textAlign: TextAlign.center,
@@ -881,9 +888,9 @@ class _CreateGroupSheetState extends State<_CreateGroupSheet> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + bottom),
       child: SingleChildScrollView(
@@ -1053,9 +1060,9 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + bottom),
       child: SingleChildScrollView(
@@ -1177,14 +1184,16 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                           Text(
                             '${_foundUser!.firstName} ${_foundUser!.lastName}',
                             style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              color: Color(0xFF1A1A2E),
+                            ),
                           ),
                           Text(
                             _foundUser!.email,
                             style: const TextStyle(
                                 fontSize: 12,
-                                color: Color(0xFF888888)),
+                                color: Color(0xFF555555)),
                           ),
                         ],
                       ),
@@ -1312,9 +1321,9 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + bottom),
       child: SingleChildScrollView(
@@ -1504,9 +1513,9 @@ class _GroupSettingsSheetState extends State<_GroupSettingsSheet> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + bottom),
       child: Column(

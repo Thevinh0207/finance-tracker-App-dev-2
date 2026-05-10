@@ -131,10 +131,10 @@ class _GoalsPageState extends State<GoalsPage> {
                 _buildHeader(),
                 Expanded(
                   child: Container(
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF5F7FA),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
                       borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(28)),
+                          const BorderRadius.vertical(top: Radius.circular(28)),
                     ),
                     child: _vm.isLoading
                         ? const Center(
@@ -295,12 +295,13 @@ class _GoalsPageState extends State<GoalsPage> {
               _buildEmptyState()
             else ...[
               if (_vm.activeGoals.isNotEmpty) ...[
-                const Text(
+                Text(
                   'Active Goals',
                   style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: _darkText),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 ..._vm.activeGoals.map((g) => Padding(
@@ -311,16 +312,17 @@ class _GoalsPageState extends State<GoalsPage> {
               if (_vm.completedGoals.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Row(
-                  children: const [
-                    Icon(Icons.check_circle_outline_rounded,
+                  children: [
+                    const Icon(Icons.check_circle_outline_rounded,
                         color: _green, size: 20),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Text(
                       'Completed Goals',
                       style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: _darkText),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
                   ],
                 ),
@@ -355,7 +357,7 @@ class _GoalsPageState extends State<GoalsPage> {
       onLongPress: () => _confirmDelete(goal),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -399,10 +401,11 @@ class _GoalsPageState extends State<GoalsPage> {
                           children: [
                             Text(
                               goal.goalName,
-                              style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: _darkText),
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Row(
@@ -443,14 +446,21 @@ class _GoalsPageState extends State<GoalsPage> {
                               TextStyle(fontSize: 13, color: _greyText)),
                       RichText(
                         text: TextSpan(
-                          style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: _darkText),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
                           children: [
                             TextSpan(text: '\$${_fmt(goal.currentAmount)}'),
+                            const TextSpan(
+                              text: ' / ',
+                              style: TextStyle(
+                                  color: _greyText,
+                                  fontWeight: FontWeight.normal),
+                            ),
                             TextSpan(
-                              text: ' / \$${_fmt(goal.goalAmount)}',
+                              text: '\$${_fmt(goal.goalAmount)}',
                               style: const TextStyle(
                                   color: _greyText,
                                   fontWeight: FontWeight.normal),
@@ -545,10 +555,11 @@ class _GoalsPageState extends State<GoalsPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(goal.goalName,
-                    style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: _darkText)),
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
+                    )),
                 const SizedBox(height: 2),
                 Text('Completed ${_fmtDate(goal.targetDate)}',
                     style:
@@ -624,7 +635,7 @@ class _GoalsPageState extends State<GoalsPage> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -645,11 +656,12 @@ class _GoalsPageState extends State<GoalsPage> {
                 color: _gradStart, size: 36),
           ),
           const SizedBox(height: 16),
-          const Text('No goals yet',
+          Text('No goals yet',
               style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: _darkText)),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              )),
           const SizedBox(height: 6),
           const Text(
             'Set financial goals to track your progress\nand stay motivated.',
@@ -806,10 +818,11 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
+    final theme = Theme.of(context);
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + bottom),
       child: SingleChildScrollView(
@@ -827,9 +840,12 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
                     borderRadius: BorderRadius.circular(2)),
               ),
             ),
-            const Text('Add New Goal',
-                style:
-                    TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text('Add New Goal',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                )),
             const SizedBox(height: 20),
             _field('Goal Name', _nameCtrl, hint: 'e.g. Emergency Fund'),
             const SizedBox(height: 12),
@@ -1013,10 +1029,11 @@ class _UpdateProgressSheetState extends State<_UpdateProgressSheet> {
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
+    final theme = Theme.of(context);
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: EdgeInsets.fromLTRB(20, 0, 20, 20 + bottom),
       child: Column(
@@ -1034,8 +1051,11 @@ class _UpdateProgressSheetState extends State<_UpdateProgressSheet> {
             ),
           ),
           Text('Update: ${widget.goal.goalName}',
-              style: const TextStyle(
-                  fontSize: 18, fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface,
+              )),
           const SizedBox(height: 4),
           Text(
               'Target: \$${widget.goal.goalAmount.toStringAsFixed(0)}',

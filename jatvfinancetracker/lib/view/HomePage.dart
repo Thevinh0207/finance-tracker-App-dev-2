@@ -3,8 +3,10 @@ import 'dart:math' as math;
 import 'ProfileSettingsPage.dart';
 import 'widgets/AppBottomNavBar.dart';
 import '../Model/Transaction.dart';
+import '../Repository/UserSettingsRepository.dart';
 import '../helper/TransactionType.dart';
 import '../util/AppRouteObserver.dart';
+import '../util/ThemeController.dart';
 import '../viewModel/HomePageViewModel.dart';
 
 class homePage extends StatelessWidget {
@@ -28,12 +30,23 @@ class mainDashboard extends StatefulWidget {
 class _mainDashboardState extends State<mainDashboard> with RouteAware {
   bool _balanceVisible = true;
   final HomePageViewModel _vm = HomePageViewModel();
+  final UserSettingsRepository _settingsRepo = UserSettingsRepository();
   PageRoute? _subscribedRoute;
 
   @override
   void initState() {
     super.initState();
     _vm.load(widget.userID);
+    _loadThemePreference();
+  }
+
+  Future<void> _loadThemePreference() async {
+    try {
+      final settings = await _settingsRepo.getOrCreate(widget.userID);
+      ThemeController.instance.setDarkMode(settings.darkMode);
+    } catch (_) {
+      // Non-fatal — keep default light theme.
+    }
   }
 
   @override
@@ -265,9 +278,10 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
   }
 
   Widget _buildWhiteSheet() {
+    final theme = Theme.of(context);
     return Container(
       decoration:  BoxDecoration(
-        color: Colors.white,
+        color: theme.scaffoldBackgroundColor,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(30),
           topRight: Radius.circular(30),
@@ -282,7 +296,7 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1A2E),
+              color: theme.colorScheme.onSurface,
             ),
           ),
            SizedBox(height: 20),
@@ -332,7 +346,7 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1A2E),
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
             GestureDetector(
@@ -376,11 +390,12 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
   }
 
   Widget _buildTransactionTile(Transaction t) {
+    final theme = Theme.of(context);
     final isIncome = t.type == TransactionType.income;
     final amountText =
         '${isIncome ? '+' : '-'}\$${_formatAmount(t.amount)}';
     final amountColor =
-        isIncome ? Color(0xFF4CAF50) : Color(0xFF1A1A2E);
+        isIncome ? Color(0xFF4CAF50) : theme.colorScheme.onSurface;
     final typeLabel = isIncome
         ? 'Income'
         : t.type == TransactionType.expense
@@ -412,7 +427,7 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1A2E),
+                  color: theme.colorScheme.onSurface,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -507,10 +522,10 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
          SizedBox(height: 4),
         Text(
           amount,
-          style:  TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 13,
-            color: Color(0xFF1A1A2E),
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
       ],

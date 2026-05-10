@@ -3,7 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart' as fb;
 
 import '../Model/User.dart';
 import '../Model/UserSettings.dart';
+import '../Repository/UserRepository.dart';
 import '../Repository/UserSettingsRepository.dart';
+import '../util/ThemeController.dart';
+import 'ChangePasswordPage.dart';
+import 'EditProfilePage.dart';
 import 'loginPage.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
@@ -16,7 +20,9 @@ class ProfileSettingsPage extends StatefulWidget {
 
 class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   final UserSettingsRepository _repo = UserSettingsRepository();
+  final UserRepository _userRepo = UserRepository();
   UserSettings? _settings;
+  late User _user = widget.user;
   bool _loading = true;
 
   bool get _darkMode => _settings?.darkMode ?? false;
@@ -42,6 +48,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   Future<void> _load() async {
     final s = await _repo.getOrCreate(widget.user.userID);
     if (!mounted) return;
+    ThemeController.instance.setDarkMode(s.darkMode);
     setState(() {
       _settings = s;
       _loading = false;
@@ -51,6 +58,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   Future<void> _update(UserSettings next) async {
     if (!mounted) return;
     setState(() => _settings = next);
+    // Drive the global theme controller so dark mode flips immediately.
+    ThemeController.instance.setDarkMode(next.darkMode);
     try {
       await _repo.save(next);
     } catch (e) {
@@ -61,8 +70,30 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     }
   }
 
+  Future<void> _openEditProfile() async {
+    final saved = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => EditProfilePage(user: _user)),
+    );
+    if (saved == true && mounted) {
+      // Re-fetch the user from Firestore so the header shows the new name/email.
+      final fresh = await _userRepo.getById(_user.userID);
+      if (!mounted || fresh == null) return;
+      setState(() => _user = fresh);
+    }
+  }
+
+  void _openChangePassword() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ChangePasswordPage(email: _user.email)),
+    );
+  }
+
   Future<void> _logout(BuildContext context) async {
     await fb.FirebaseAuth.instance.signOut();
+    // Reset theme so the auth screens always render in light mode.
+    ThemeController.instance.setDarkMode(false);
     if (!context.mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
@@ -73,19 +104,16 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Color(0xFFF4F6FA),
       appBar: AppBar(
         title: Text(
           'Profile & Settings',
           style: TextStyle(
-            color: Color(0xFF1A1A2E),
+            color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: Color(0xFFF4F6FA),
-        elevation: 0,
-        iconTheme: IconThemeData(color: Color(0xFF1A1A2E)),
       ),
       body: SafeArea(
         child: _loading
@@ -101,12 +129,12 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 _NavItem(
                   icon: Icons.person_outline,
                   label: 'Edit Profile',
-                  onTap: () {},
+                  onTap: _openEditProfile,
                 ),
                 _NavItem(
                   icon: Icons.lock_outline,
                   label: 'Change Password',
-                  onTap: () {},
+                  onTap: _openChangePassword,
                 ),
                 _ToggleItem(
                   icon: Icons.shield_outlined,
@@ -188,7 +216,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     );
   }
   Widget _buildProfileHeader() {
-    final user = widget.user;
+    final user = _user;
     final initials = _initials(user.firstName, user.lastName);
     return Container(
       padding: EdgeInsets.all(20),
@@ -250,6 +278,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   }
 
   Widget _buildSection(String title, List<Widget> items) {
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -267,7 +296,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         ),
         Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: theme.cardColor,
             borderRadius: BorderRadius.circular(14),
           ),
           child: Column(
@@ -275,7 +304,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               for (int i = 0; i < items.length; i++) ...[
                 items[i],
                 if (i < items.length - 1)
-                  Divider(height: 1, indent: 56, color: Color(0xFFEEEEEE)),
+                  Divider(height: 1, indent: 56, color: theme.dividerColor),
               ],
             ],
           ),
@@ -319,7 +348,7 @@ class _NavItem extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontSize: 15,
-                  color: Color(0xFF1A1A2E),
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -358,7 +387,7 @@ class _ToggleItem extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 15,
-                color: Color(0xFF1A1A2E),
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -402,7 +431,7 @@ class _DropdownItem extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 15,
-                color: Color(0xFF1A1A2E),
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -414,9 +443,10 @@ class _DropdownItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               style: TextStyle(
                 fontSize: 14,
-                color: Color(0xFF1A1A2E),
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w500,
               ),
+              dropdownColor: Theme.of(context).cardColor,
               icon: Icon(Icons.keyboard_arrow_down, color: Colors.grey),
               items: [
                 for (final opt in options)

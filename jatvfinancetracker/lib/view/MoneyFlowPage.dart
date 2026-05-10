@@ -62,8 +62,8 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
               _buildHeader(),
               Expanded(
                 child: Container(
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF5F7FA),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).scaffoldBackgroundColor,
                     borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                   ),
                   child: _vm.isLoading
@@ -95,7 +95,11 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
           const SizedBox(height: 12),
           Text(
             'Failed to load data',
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: _darkText),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 8),
           TextButton(
@@ -232,7 +236,7 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
     const tabs = ['Overview', 'Income', 'Expenses'];
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -291,7 +295,7 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 16, 16, 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -304,14 +308,14 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.only(left: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
             child: Text(
               '6-Month Trend',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
-                color: _darkText,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ),
@@ -531,7 +535,7 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
       return Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).cardColor,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
@@ -559,7 +563,7 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -574,10 +578,10 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
         children: [
           Text(
             isIncome ? 'Income by Category' : 'Expenses by Category',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: _darkText,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 14),
@@ -593,9 +597,9 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
                       Expanded(
                         child: Text(
                           e.key,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: _darkText,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontWeight: FontWeight.w500,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -604,10 +608,10 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
                       const SizedBox(width: 8),
                       Text(
                         '\$${_fmt(e.value)}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: _darkText,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(width: 8),
