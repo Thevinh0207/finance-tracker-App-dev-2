@@ -59,7 +59,7 @@ class _loginCardState extends State<loginCard> {
       final settings = await _settingsRepo.getOrCreate(userID);
       if (!mounted) return;
 
-      if (settings.twoFactorEnabled) {
+      if (settings.twoFactorEnabled && (settings.totpSecret?.isNotEmpty ?? false)) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
