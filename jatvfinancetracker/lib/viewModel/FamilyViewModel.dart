@@ -180,9 +180,12 @@ class FamilyViewModel extends ChangeNotifier {
         budgetAllocation: adminBudget,
       );
       await load(adminUserID);
-      // Switch to the newly created group (it's the last one after reload).
-      _selectedIndex = _allGroups.length - 1;
-      notifyListeners();
+      // Switch to the newly created group by its ID.
+      final newIdx = _allGroups.indexWhere((g) => g.groupID == groupID);
+      if (newIdx >= 0) {
+        _selectedIndex = newIdx;
+        notifyListeners();
+      }
     } catch (e) {
       _error = e.toString();
       notifyListeners();

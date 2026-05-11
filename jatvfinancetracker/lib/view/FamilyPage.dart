@@ -210,20 +210,40 @@ class _FamilyPageState extends State<FamilyPage> {
                     ),
                 ],
               ),
-              if (_vm.hasGroup)
-                GestureDetector(
-                  onTap: _showGroupSettings,
-                  child: Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.22),
-                      borderRadius: BorderRadius.circular(12),
+              Row(
+                children: [
+                  // Always-visible: create a new family group.
+                  GestureDetector(
+                    onTap: _showCreateGroupSheet,
+                    child: Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.22),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.add_rounded,
+                          color: Colors.white, size: 22),
                     ),
-                    child: const Icon(Icons.settings_rounded,
-                        color: Colors.white, size: 22),
                   ),
-                ),
+                  if (_vm.hasGroup) ...[
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: _showGroupSettings,
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.22),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.settings_rounded,
+                            color: Colors.white, size: 22),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ],
           ),
           if (_vm.hasMultipleGroups) ...[
