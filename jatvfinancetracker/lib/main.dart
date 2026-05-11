@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'config/FirebaseConfig.dart';
 import 'util/AppRouteObserver.dart';
 import 'util/AppTheme.dart';
+import 'util/LanguageController.dart';
 import 'util/ThemeController.dart';
 import 'view/SplashScreen.dart';
 
@@ -22,15 +23,18 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: ThemeController.instance,
-      builder: (context, _) => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: ThemeController.instance.isDarkMode
-            ? ThemeMode.dark
-            : ThemeMode.light,
-        navigatorObservers: [appRouteObserver],
-        home: const SplashScreen(),
+      builder: (context, _) => ListenableBuilder(
+        listenable: LanguageController.instance,
+        builder: (context, _) => MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: ThemeController.instance.isDarkMode
+              ? ThemeMode.dark
+              : ThemeMode.light,
+          navigatorObservers: [appRouteObserver],
+          home: const SplashScreen(),
+        ),
       ),
     );
   }

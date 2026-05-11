@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../Model/Goal.dart';
 import '../helper/GoalType.dart';
+import '../util/AppLocalizations.dart';
 import '../viewModel/GoalsViewModel.dart';
 import 'widgets/AppBottomNavBar.dart';
 
@@ -99,19 +100,19 @@ class _GoalsPageState extends State<GoalsPage> {
   String _goalLabel(GoalType t) {
     switch (t) {
       case GoalType.emergency:
-        return 'Emergency';
+        return AppLocalizations.tr('goals_label_emergency');
       case GoalType.saving:
-        return 'Savings';
+        return AppLocalizations.tr('goals_label_saving');
       case GoalType.purchase:
-        return 'Purchase';
+        return AppLocalizations.tr('goals_label_purchase');
       case GoalType.retirement:
-        return 'Retirement';
+        return AppLocalizations.tr('goals_label_retirement');
       case GoalType.debt:
-        return 'Debt';
+        return AppLocalizations.tr('goals_label_debt');
       case GoalType.investment:
-        return 'Investment';
+        return AppLocalizations.tr('goals_label_investment');
       case GoalType.spending:
-        return 'Spending';
+        return AppLocalizations.tr('goals_label_spending');
     }
   }
 
@@ -170,19 +171,19 @@ class _GoalsPageState extends State<GoalsPage> {
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
-                    'Finance Goals',
-                    style: TextStyle(
+                    AppLocalizations.tr('goals_title'),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    'Track your financial dreams',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                    AppLocalizations.tr('goals_subtitle'),
+                    style: const TextStyle(color: Colors.white70, fontSize: 13),
                   ),
                 ],
               ),
@@ -226,13 +227,12 @@ class _GoalsPageState extends State<GoalsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    children: const [
-                      Icon(Icons.track_changes_rounded,
+                    children: [
+                      const Icon(Icons.track_changes_rounded,
                           color: Colors.white70, size: 15),
-                      SizedBox(width: 5),
-                      Text('Overall Progress',
-                          style:
-                              TextStyle(color: Colors.white70, fontSize: 13)),
+                      const SizedBox(width: 5),
+                      Text(AppLocalizations.tr('goals_overall_progress'),
+                          style: const TextStyle(color: Colors.white70, fontSize: 13)),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -249,8 +249,8 @@ class _GoalsPageState extends State<GoalsPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text('Target',
-                      style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  Text(AppLocalizations.tr('goals_target'),
+                      style: const TextStyle(color: Colors.white70, fontSize: 13)),
                   const SizedBox(height: 4),
                   Text(
                     '\$${_fmt(_vm.totalTarget)}',
@@ -276,7 +276,7 @@ class _GoalsPageState extends State<GoalsPage> {
           ),
           const SizedBox(height: 10),
           Text(
-            '${_vm.overallPercentage.toStringAsFixed(1)}% of your goals achieved',
+            '${_vm.overallPercentage.toStringAsFixed(1)}% ${AppLocalizations.tr('goals_pct_achieved')}',
             style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
         ],
@@ -301,7 +301,7 @@ class _GoalsPageState extends State<GoalsPage> {
             else ...[
               if (_vm.activeGoals.isNotEmpty) ...[
                 Text(
-                  'Active Goals',
+                  AppLocalizations.tr('goals_active'),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -322,7 +322,7 @@ class _GoalsPageState extends State<GoalsPage> {
                         color: _green, size: 20),
                     const SizedBox(width: 8),
                     Text(
-                      'Completed Goals',
+                      AppLocalizations.tr('goals_completed'),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -446,9 +446,8 @@ class _GoalsPageState extends State<GoalsPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Progress',
-                          style:
-                              TextStyle(fontSize: 13, color: _greyText)),
+                      Text(AppLocalizations.tr('goals_progress'),
+                          style: const TextStyle(fontSize: 13, color: _greyText)),
                       RichText(
                         text: TextSpan(
                           style: TextStyle(
@@ -490,14 +489,14 @@ class _GoalsPageState extends State<GoalsPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '${(progress * 100).toStringAsFixed(1)}% complete',
+                        '${(progress * 100).toStringAsFixed(1)}% ${AppLocalizations.tr('goals_complete')}',
                         style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: color),
                       ),
                       Text(
-                        '\$${_fmt(remaining)} remaining',
+                        '\$${_fmt(remaining)} ${AppLocalizations.tr('goals_remaining')}',
                         style: const TextStyle(
                             fontSize: 12, color: _greyText),
                       ),
@@ -510,9 +509,8 @@ class _GoalsPageState extends State<GoalsPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Monthly contribution',
-                            style:
-                                TextStyle(fontSize: 12, color: _greyText)),
+                        Text(AppLocalizations.tr('goals_monthly'),
+                            style: const TextStyle(fontSize: 12, color: _greyText)),
                         Text(
                           '+\$${_fmt(monthly)}/month',
                           style: const TextStyle(
@@ -566,7 +564,7 @@ class _GoalsPageState extends State<GoalsPage> {
                       color: Theme.of(context).colorScheme.onSurface,
                     )),
                 const SizedBox(height: 2),
-                Text('Completed ${_fmtDate(goal.targetDate)}',
+                Text('${AppLocalizations.tr('goals_completed')} ${_fmtDate(goal.targetDate)}',
                     style:
                         const TextStyle(fontSize: 12, color: _greyText)),
               ],
@@ -614,8 +612,8 @@ class _GoalsPageState extends State<GoalsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Goal Insights',
-                    style: TextStyle(
+                Text(AppLocalizations.tr('goals_insights'),
+                    style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.bold)),
@@ -661,15 +659,15 @@ class _GoalsPageState extends State<GoalsPage> {
                 color: _gradStart, size: 36),
           ),
           const SizedBox(height: 16),
-          Text('No goals yet',
+          Text(AppLocalizations.tr('goals_none_title'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.onSurface,
               )),
           const SizedBox(height: 6),
-          const Text(
-            'Set financial goals to track your progress\nand stay motivated.',
+          Text(
+            AppLocalizations.tr('goals_none_body'),
             textAlign: TextAlign.center,
             style:
                 TextStyle(fontSize: 13, color: _greyText, height: 1.4),
@@ -678,7 +676,7 @@ class _GoalsPageState extends State<GoalsPage> {
           ElevatedButton.icon(
             onPressed: _showAddGoalSheet,
             icon: const Icon(Icons.add_rounded, size: 18),
-            label: const Text('Add First Goal'),
+            label: Text(AppLocalizations.tr('goals_add_first')),
             style: ElevatedButton.styleFrom(
               backgroundColor: _gradStart,
               foregroundColor: Colors.white,
@@ -738,18 +736,16 @@ class _GoalsPageState extends State<GoalsPage> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Goal'),
-        content:
-            Text('Delete "${goal.goalName}"? This cannot be undone.'),
+        title: Text(AppLocalizations.tr('goals_delete_title')),
+        content: Text('Delete "${goal.goalName}"? ${AppLocalizations.tr('goals_delete_body')}'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text(AppLocalizations.tr('cancel'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style:
-                TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(AppLocalizations.tr('delete')),
           ),
         ],
       ),
@@ -795,19 +791,19 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
   String _typeLabel(GoalType t) {
     switch (t) {
       case GoalType.emergency:
-        return 'Emergency Fund';
+        return AppLocalizations.tr('goals_type_emergency');
       case GoalType.saving:
-        return 'Savings';
+        return AppLocalizations.tr('goals_type_saving');
       case GoalType.purchase:
-        return 'Purchase';
+        return AppLocalizations.tr('goals_type_purchase');
       case GoalType.retirement:
-        return 'Retirement';
+        return AppLocalizations.tr('goals_type_retirement');
       case GoalType.debt:
-        return 'Debt Payoff';
+        return AppLocalizations.tr('goals_type_debt');
       case GoalType.investment:
-        return 'Investment';
+        return AppLocalizations.tr('goals_type_investment');
       case GoalType.spending:
-        return 'Spending';
+        return AppLocalizations.tr('goals_type_spending');
     }
   }
 
@@ -849,26 +845,26 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
                     borderRadius: BorderRadius.circular(2)),
               ),
             ),
-            Text('Add New Goal',
+            Text(AppLocalizations.tr('goals_add_title'),
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.onSurface,
                 )),
             const SizedBox(height: 20),
-            _field('Goal Name', _nameCtrl, hint: 'e.g. Emergency Fund'),
+            _field(AppLocalizations.tr('goals_name'), _nameCtrl, hint: 'e.g. Emergency Fund'),
             const SizedBox(height: 12),
-            _field('Target Amount (\$)', _targetCtrl,
+            _field(AppLocalizations.tr('goals_target_amount'), _targetCtrl,
                 hint: '10000', number: true),
             const SizedBox(height: 12),
-            _field('Current Savings (\$)', _currentCtrl,
+            _field(AppLocalizations.tr('goals_current_savings'), _currentCtrl,
                 hint: '0', number: true),
             const SizedBox(height: 12),
-            _field('Monthly Contribution (\$, optional)', _monthlyCtrl,
+            _field(AppLocalizations.tr('goals_monthly_optional'), _monthlyCtrl,
                 hint: '500', number: true),
             const SizedBox(height: 12),
-            const Text('Goal Type',
-                style: TextStyle(fontSize: 13, color: Color(0xFF888888))),
+            Text(AppLocalizations.tr('goals_type'),
+                style: const TextStyle(fontSize: 13, color: Color(0xFF888888))),
             const SizedBox(height: 8),
             DropdownButtonFormField<GoalType>(
               value: _type,
@@ -891,8 +887,8 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
               onChanged: (v) => setState(() => _type = v!),
             ),
             const SizedBox(height: 12),
-            const Text('Target Date',
-                style: TextStyle(fontSize: 13, color: Color(0xFF888888))),
+            Text(AppLocalizations.tr('goals_target_date'),
+                style: const TextStyle(fontSize: 13, color: Color(0xFF888888))),
             const SizedBox(height: 8),
             GestureDetector(
               onTap: () async {
@@ -932,7 +928,7 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            _field('Note (optional)', _noteCtrl,
+            _field(AppLocalizations.tr('goals_note_optional'), _noteCtrl,
                 hint: 'Any additional notes'),
             const SizedBox(height: 24),
             SizedBox(
@@ -952,8 +948,8 @@ class _AddGoalSheetState extends State<_AddGoalSheet> {
                         width: 20,
                         child: CircularProgressIndicator(
                             color: Colors.white, strokeWidth: 2))
-                    : const Text('Create Goal',
-                        style: TextStyle(
+                    : Text(AppLocalizations.tr('goals_create'),
+                        style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold)),
               ),
@@ -1058,7 +1054,7 @@ class _UpdateProgressSheetState extends State<_UpdateProgressSheet> {
           borderRadius: BorderRadius.circular(16),
         ),
         title: Text(
-          'Decreasing goal amount',
+          AppLocalizations.tr('goals_decrease_title'),
           style: TextStyle(color: theme.colorScheme.onSurface),
         ),
         content: Text(
@@ -1070,12 +1066,12 @@ class _UpdateProgressSheetState extends State<_UpdateProgressSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.tr('cancel')),
           ),
           TextButton(
             onPressed: () =>
                 Navigator.pop(ctx, ProgressDecreaseIntent.correction),
-            child: const Text('Correction'),
+            child: Text(AppLocalizations.tr('goals_correction')),
           ),
           ElevatedButton(
             onPressed: () =>
@@ -1084,7 +1080,7 @@ class _UpdateProgressSheetState extends State<_UpdateProgressSheet> {
               backgroundColor: _gradStart,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Withdrawal'),
+            child: Text(AppLocalizations.tr('goals_withdrawal')),
           ),
         ],
       ),
@@ -1115,7 +1111,7 @@ class _UpdateProgressSheetState extends State<_UpdateProgressSheet> {
                   borderRadius: BorderRadius.circular(2)),
             ),
           ),
-          Text('Update: ${widget.goal.goalName}',
+          Text('${AppLocalizations.tr('goals_update_prefix')} ${widget.goal.goalName}',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -1126,9 +1122,8 @@ class _UpdateProgressSheetState extends State<_UpdateProgressSheet> {
               'Target: \$${widget.goal.goalAmount.toStringAsFixed(0)}',
               style: const TextStyle(color: Color(0xFF888888))),
           const SizedBox(height: 20),
-          const Text('Current Amount (\$)',
-              style:
-                  TextStyle(fontSize: 13, color: Color(0xFF888888))),
+          Text(AppLocalizations.tr('goals_current_amount'),
+              style: const TextStyle(fontSize: 13, color: Color(0xFF888888))),
           const SizedBox(height: 8),
           TextField(
             controller: _ctrl,
@@ -1166,8 +1161,8 @@ class _UpdateProgressSheetState extends State<_UpdateProgressSheet> {
                       width: 20,
                       child: CircularProgressIndicator(
                           color: Colors.white, strokeWidth: 2))
-                  : const Text('Save Progress',
-                      style: TextStyle(
+                  : Text(AppLocalizations.tr('goals_save_progress'),
+                      style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold)),
             ),

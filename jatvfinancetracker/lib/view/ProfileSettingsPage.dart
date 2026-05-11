@@ -5,6 +5,8 @@ import '../Model/User.dart';
 import '../Model/UserSettings.dart';
 import '../Repository/UserRepository.dart';
 import '../Repository/UserSettingsRepository.dart';
+import '../util/AppLocalizations.dart';
+import '../util/LanguageController.dart';
 import '../util/ThemeController.dart';
 import 'ChangePasswordPage.dart';
 import 'EditProfilePage.dart';
@@ -58,8 +60,8 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   Future<void> _update(UserSettings next) async {
     if (!mounted) return;
     setState(() => _settings = next);
-    // Drive the global theme controller so dark mode flips immediately.
     ThemeController.instance.setDarkMode(next.darkMode);
+    LanguageController.instance.setLanguage(next.language);
     try {
       await _repo.save(next);
     } catch (e) {
@@ -108,7 +110,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Profile & Settings',
+          AppLocalizations.tr('profile_title'),
           style: TextStyle(
             color: theme.colorScheme.onSurface,
             fontWeight: FontWeight.bold,
@@ -125,42 +127,42 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             children: [
               _buildProfileHeader(),
               SizedBox(height: 24),
-              _buildSection('Account', [
+              _buildSection(AppLocalizations.tr('profile_account'), [
                 _NavItem(
                   icon: Icons.person_outline,
-                  label: 'Edit Profile',
+                  label: AppLocalizations.tr('profile_edit'),
                   onTap: _openEditProfile,
                 ),
                 _NavItem(
                   icon: Icons.lock_outline,
-                  label: 'Change Password',
+                  label: AppLocalizations.tr('profile_change_password'),
                   onTap: _openChangePassword,
                 ),
                 _ToggleItem(
                   icon: Icons.shield_outlined,
-                  label: 'Two-Factor Authentication',
+                  label: AppLocalizations.tr('profile_2fa'),
                   value: _twoFactorEnabled,
                   onChanged: (v) =>
                       _update(_settings!.copyWith(twoFactorEnabled: v)),
                 ),
               ]),
               SizedBox(height: 16),
-              _buildSection('Preferences', [
+              _buildSection(AppLocalizations.tr('profile_preferences'), [
                 _NavItem(
                   icon: Icons.notifications_outlined,
-                  label: 'Notifications',
+                  label: AppLocalizations.tr('profile_notifications'),
                   onTap: () {},
                 ),
                 _ToggleItem(
                   icon: Icons.color_lens_outlined,
-                  label: 'Dark Mode',
+                  label: AppLocalizations.tr('profile_dark_mode'),
                   value: _darkMode,
                   onChanged: (v) =>
                       _update(_settings!.copyWith(darkMode: v)),
                 ),
                 _DropdownItem(
                   icon: Icons.language_outlined,
-                  label: 'Language',
+                  label: AppLocalizations.tr('profile_language'),
                   value: _language,
                   options: _languages,
                   onChanged: (v) {
@@ -171,20 +173,20 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 ),
               ]),
               SizedBox(height: 16),
-              _buildSection('Support', [
+              _buildSection(AppLocalizations.tr('profile_support'), [
                 _NavItem(
                   icon: Icons.help_outline,
-                  label: 'Help & Support',
+                  label: AppLocalizations.tr('profile_help'),
                   onTap: () {},
                 ),
                 _NavItem(
                   icon: Icons.privacy_tip_outlined,
-                  label: 'Privacy Policy',
+                  label: AppLocalizations.tr('profile_privacy'),
                   onTap: () {},
                 ),
                 _NavItem(
                   icon: Icons.info_outline,
-                  label: 'About',
+                  label: AppLocalizations.tr('profile_about'),
                   onTap: () {},
                 ),
               ]),
@@ -193,7 +195,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 onPressed: () => _logout(context),
                 icon: Icon(Icons.logout, color: Colors.white),
                 label: Text(
-                  'Log Out',
+                  AppLocalizations.tr('profile_logout'),
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,

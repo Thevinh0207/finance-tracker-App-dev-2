@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../util/AppLocalizations.dart';
 import 'widgets/AppBottomNavBar.dart';
 import '../Model/Transaction.dart';
 import '../helper/TransactionType.dart';
@@ -133,7 +134,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Transaction History',
+            AppLocalizations.tr('history_title'),
             style: TextStyle(
               color: Colors.white,
               fontSize: 26,
@@ -150,7 +151,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
               controller: _searchController,
               onChanged: _vm.setQuery,
               decoration: InputDecoration(
-                hintText: 'Search transactions...',
+                hintText: AppLocalizations.tr('history_search'),
                 hintStyle: TextStyle(color: Colors.grey),
                 prefixIcon: Icon(Icons.search, color: Colors.grey),
                 border: InputBorder.none,
@@ -184,7 +185,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
             Expanded(
               child: _toolbarButton(
                 icon: Icons.filter_alt_outlined,
-                label: 'Filter',
+                label: AppLocalizations.tr('history_filter'),
                 active: _vm.filter != TransactionFilter.all,
                 onTap: _showFilterSheet,
               ),
@@ -200,7 +201,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
             Expanded(
               child: _toolbarButton(
                 icon: Icons.swap_vert,
-                label: 'Sort',
+                label: AppLocalizations.tr('history_sort'),
                 active: _vm.sort != TransactionSort.newest,
                 onTap: _showSortSheet,
               ),
@@ -258,7 +259,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
         children: [
           Expanded(
             child: _summaryCard(
-              label: 'Total Income',
+              label: AppLocalizations.tr('history_total_income'),
               amount: '+\$${_formatAmount(_vm.totalIncomeThisMonth)}',
               amountColor: Color(0xFF4CAF50),
             ),
@@ -266,7 +267,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
           SizedBox(width: 12),
           Expanded(
             child: _summaryCard(
-              label: 'Total Expenses',
+              label: AppLocalizations.tr('history_total_expenses'),
               amount: '-\$${_formatAmount(_vm.totalExpensesThisMonth)}',
               amountColor: Color(0xFFE53935),
             ),
@@ -312,7 +313,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
           ),
           SizedBox(height: 4),
           Text(
-            'This month',
+            AppLocalizations.tr('home_this_month'),
             style: TextStyle(color: Colors.grey, fontSize: 11),
           ),
         ],
@@ -324,7 +325,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20),
       child: Text(
-        'ALL TRANSACTIONS',
+        AppLocalizations.tr('history_all_transactions'),
         style: TextStyle(
           color: Colors.grey,
           fontWeight: FontWeight.w700,
@@ -367,7 +368,7 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
           padding: EdgeInsets.symmetric(vertical: 60),
           child: Center(
             child: Text(
-              'No transactions yet',
+              AppLocalizations.tr('history_no_transactions'),
               style: TextStyle(color: Colors.grey, fontSize: 14),
             ),
           ),
@@ -469,13 +470,13 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
 
   void _showFilterSheet() {
     _showOptionsSheet<TransactionFilter>(
-      title: 'Filter by type',
+      title: AppLocalizations.tr('history_filter_by_type'),
       current: _vm.filter,
       options: {
-        TransactionFilter.all: 'All',
-        TransactionFilter.income: 'Income',
-        TransactionFilter.expense: 'Expense',
-        TransactionFilter.transfer: 'Transfer',
+        TransactionFilter.all: AppLocalizations.tr('history_all'),
+        TransactionFilter.income: AppLocalizations.tr('history_income'),
+        TransactionFilter.expense: AppLocalizations.tr('history_expense'),
+        TransactionFilter.transfer: AppLocalizations.tr('history_transfer'),
       },
       onSelect: _vm.setFilter,
     );
@@ -483,13 +484,13 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
 
   void _showSortSheet() {
     _showOptionsSheet<TransactionSort>(
-      title: 'Sort by',
+      title: AppLocalizations.tr('history_sort_by'),
       current: _vm.sort,
       options: {
-        TransactionSort.newest: 'Newest first',
-        TransactionSort.oldest: 'Oldest first',
-        TransactionSort.highest: 'Highest amount',
-        TransactionSort.lowest: 'Lowest amount',
+        TransactionSort.newest: AppLocalizations.tr('history_newest'),
+        TransactionSort.oldest: AppLocalizations.tr('history_oldest'),
+        TransactionSort.highest: AppLocalizations.tr('history_highest'),
+        TransactionSort.lowest: AppLocalizations.tr('history_lowest'),
       },
       onSelect: _vm.setSort,
     );
@@ -497,14 +498,14 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
 
   void _showDateSheet() {
     _showOptionsSheet<DateRangePreset>(
-      title: 'Date range',
+      title: AppLocalizations.tr('history_date_range'),
       current: _vm.range,
       options: {
-        DateRangePreset.allTime: 'All time',
-        DateRangePreset.thisMonth: 'This month',
-        DateRangePreset.lastMonth: 'Last month',
-        DateRangePreset.last7Days: 'Last 7 days',
-        DateRangePreset.last30Days: 'Last 30 days',
+        DateRangePreset.allTime: AppLocalizations.tr('history_all_time'),
+        DateRangePreset.thisMonth: AppLocalizations.tr('home_this_month'),
+        DateRangePreset.lastMonth: AppLocalizations.tr('history_last_month'),
+        DateRangePreset.last7Days: AppLocalizations.tr('history_last_7'),
+        DateRangePreset.last30Days: AppLocalizations.tr('history_last_30'),
       },
       onSelect: _vm.setRange,
     );
@@ -568,15 +569,15 @@ class _TransactionHistoryPageState extends State<TransactionHistoryPage> {
   String _rangeLabel(DateRangePreset r) {
     switch (r) {
       case DateRangePreset.allTime:
-        return 'Date';
+        return AppLocalizations.tr('history_date');
       case DateRangePreset.thisMonth:
-        return 'This month';
+        return AppLocalizations.tr('home_this_month');
       case DateRangePreset.lastMonth:
-        return 'Last month';
+        return AppLocalizations.tr('history_last_month');
       case DateRangePreset.last7Days:
-        return 'Last 7d';
+        return AppLocalizations.tr('history_last_7_label');
       case DateRangePreset.last30Days:
-        return 'Last 30d';
+        return AppLocalizations.tr('history_last_30_label');
     }
   }
 
@@ -714,7 +715,7 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
 
     final amount = double.tryParse(_amountController.text.trim());
     if (amount == null || amount <= 0) {
-      setState(() => _localError = 'Enter a valid amount.');
+      setState(() => _localError = AppLocalizations.tr('history_valid_amount'));
       return;
     }
 
@@ -735,7 +736,7 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
     if (ok) {
       widget.onSaved();
     } else {
-      setState(() => _localError = widget.vm.error ?? 'Failed to save.');
+      setState(() => _localError = widget.vm.error ?? AppLocalizations.tr('history_failed_save'));
     }
   }
 
@@ -764,7 +765,7 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
             ),
             SizedBox(height: 16),
             Text(
-              'Add Transaction',
+              AppLocalizations.tr('history_add_transaction'),
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -774,25 +775,25 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
             SizedBox(height: 16),
             _typeSelector(),
             SizedBox(height: 16),
-            _label('Name'),
+            _label(AppLocalizations.tr('history_name')),
             TextFormField(
               controller: _nameController,
               decoration: _decoration('e.g. Grocery Store'),
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Required' : null,
+                  (v == null || v.trim().isEmpty) ? AppLocalizations.tr('required') : null,
             ),
             SizedBox(height: 14),
-            _label('Amount'),
+            _label(AppLocalizations.tr('history_amount')),
             TextFormField(
               controller: _amountController,
               keyboardType:
                   TextInputType.numberWithOptions(decimal: true),
               decoration: _decoration('0.00', prefix: '\$ '),
               validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Required' : null,
+                  (v == null || v.trim().isEmpty) ? AppLocalizations.tr('required') : null,
             ),
             SizedBox(height: 14),
-            _label('Category'),
+            _label(AppLocalizations.tr('history_category')),
             if (hasCategories)
               DropdownButtonFormField<String?>(
                 value: _categoryID,
@@ -807,7 +808,7 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
                   DropdownMenuItem<String?>(
                     value: null,
                     child: Text(
-                      '+ New category',
+                      AppLocalizations.tr('history_new_category'),
                       style: TextStyle(color: Color(0xFF4A90D9)),
                     ),
                   ),
@@ -829,7 +830,7 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
               ),
             ],
             SizedBox(height: 14),
-            _label('Date'),
+            _label(AppLocalizations.tr('history_date')),
             GestureDetector(
               onTap: _pickDate,
               child: Container(
@@ -857,14 +858,14 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
             SizedBox(height: 14),
             if (widget.vm.activeGoals.isNotEmpty &&
                 _type != TransactionType.expense) ...[
-              _label('Apply to Goal (optional)'),
+              _label(AppLocalizations.tr('history_apply_goal')),
               DropdownButtonFormField<String?>(
                 value: _goalID,
                 decoration: _decoration('None — no goal selected'),
                 items: [
-                  const DropdownMenuItem<String?>(
+                  DropdownMenuItem<String?>(
                     value: null,
-                    child: Text('None'),
+                    child: Text(AppLocalizations.tr('none')),
                   ),
                   ...widget.vm.activeGoals.map(
                     (g) => DropdownMenuItem<String?>(
@@ -877,7 +878,7 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
               ),
               SizedBox(height: 14),
             ],
-            _label('Note (optional)'),
+            _label(AppLocalizations.tr('history_note_optional')),
             TextFormField(
               controller: _noteController,
               maxLines: 2,
@@ -909,7 +910,7 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
                             strokeWidth: 2.5, color: Colors.white),
                       )
                     : Text(
-                        'Save Transaction',
+                        AppLocalizations.tr('history_save_transaction'),
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -926,9 +927,9 @@ class _AddTransactionFormState extends State<_AddTransactionForm> {
 
   Widget _typeSelector() {
     final types = [
-      (TransactionType.income, 'Income'),
-      (TransactionType.expense, 'Expense'),
-      (TransactionType.transfer, 'Transfer'),
+      (TransactionType.income, AppLocalizations.tr('history_income')),
+      (TransactionType.expense, AppLocalizations.tr('history_expense')),
+      (TransactionType.transfer, AppLocalizations.tr('history_transfer')),
     ];
     return Container(
       padding: EdgeInsets.all(4),

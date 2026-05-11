@@ -5,7 +5,9 @@ import 'widgets/AppBottomNavBar.dart';
 import '../Model/Transaction.dart';
 import '../Repository/UserSettingsRepository.dart';
 import '../helper/TransactionType.dart';
+import '../util/AppLocalizations.dart';
 import '../util/AppRouteObserver.dart';
+import '../util/LanguageController.dart';
 import '../util/ThemeController.dart';
 import '../viewModel/HomePageViewModel.dart';
 
@@ -44,8 +46,9 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
     try {
       final settings = await _settingsRepo.getOrCreate(widget.userID);
       ThemeController.instance.setDarkMode(settings.darkMode);
+      LanguageController.instance.setLanguage(settings.language);
     } catch (_) {
-      // Non-fatal — keep default light theme.
+      // Non-fatal — keep defaults.
     }
   }
 
@@ -136,8 +139,8 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-               Text(
-                'Welcome back,',
+              Text(
+                AppLocalizations.tr('home_welcome'),
                 style: TextStyle(color: Colors.white70, fontSize: 14),
               ),
               Text(
@@ -201,8 +204,8 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                 Text(
-                  'Total Balance',
+                Text(
+                  AppLocalizations.tr('home_total_balance'),
                   style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 GestureDetector(
@@ -228,9 +231,9 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
              SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildStatBox('Income', _vm.income, isIncome: true)),
+                Expanded(child: _buildStatBox(AppLocalizations.tr('home_income'), _vm.income, isIncome: true)),
                  SizedBox(width: 12),
-                Expanded(child: _buildStatBox('Expenses', _vm.expenses, isIncome: false)),
+                Expanded(child: _buildStatBox(AppLocalizations.tr('home_expenses'), _vm.expenses, isIncome: false)),
               ],
             ),
           ],
@@ -292,7 +295,7 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
            Text(
-            'Spending Overview',
+            AppLocalizations.tr('home_spending_overview'),
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -305,20 +308,20 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildLegendItem('Income', '\$${_formatAmount(_vm.income)}',  Color(0xFF4CAF50)),
-              _buildLegendItem('Expenses', '\$${_formatAmount(_vm.expenses)}',  Color(0xFFE53935)),
-              _buildLegendItem('Savings', '\$${_formatAmount(_vm.savings)}',  Color(0xFF5C9BD6)),
+              _buildLegendItem(AppLocalizations.tr('home_income'), '\$${_formatAmount(_vm.income)}', Color(0xFF4CAF50)),
+              _buildLegendItem(AppLocalizations.tr('home_expenses'), '\$${_formatAmount(_vm.expenses)}', Color(0xFFE53935)),
+              _buildLegendItem(AppLocalizations.tr('home_savings'), '\$${_formatAmount(_vm.savings)}', Color(0xFF5C9BD6)),
             ],
           ),
            SizedBox(height: 24),
           Row(
             children: [
               Expanded(
-                child: _buildActionButton('This Month', Icons.show_chart,  Color(0xFF4CAF50)),
+                child: _buildActionButton(AppLocalizations.tr('home_this_month_btn'), Icons.show_chart, Color(0xFF4CAF50)),
               ),
               SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton('Savings Rate', Icons.trending_down,  Color(0xFFE65100)),
+                child: _buildActionButton(AppLocalizations.tr('home_savings_rate'), Icons.trending_down, Color(0xFFE65100)),
               ),
             ],
           ),
@@ -342,7 +345,7 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Recent Transactions',
+              AppLocalizations.tr('home_recent_transactions'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -352,7 +355,7 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
             GestureDetector(
               onTap: () {},
               child: Text(
-                'See All',
+                AppLocalizations.tr('home_see_all'),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -368,7 +371,7 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
             padding: EdgeInsets.symmetric(vertical: 24),
             child: Center(
               child: Text(
-                'No transactions yet',
+                AppLocalizations.tr('home_no_transactions'),
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey,
@@ -484,9 +487,12 @@ class _mainDashboardState extends State<mainDashboard> with RouteAware {
     final today = DateTime(now.year, now.month, now.day);
     final that = DateTime(date.year, date.month, date.day);
     final diff = today.difference(that).inDays;
-    if (diff == 0) return 'Today';
-    if (diff == 1) return 'Yesterday';
-    if (diff > 1 && diff < 7) return '$diff days ago';
+    if (diff == 0) return AppLocalizations.tr('home_today');
+    if (diff == 1) return AppLocalizations.tr('home_yesterday');
+    if (diff > 1 && diff < 7) {
+      final key = AppLocalizations.tr('home_days_ago');
+      return key.contains('{n}') ? key.replaceAll('{n}', '$diff') : '$diff ${AppLocalizations.tr('home_days_ago')}';
+    }
     return '${date.month}/${date.day}/${date.year}';
   }
 

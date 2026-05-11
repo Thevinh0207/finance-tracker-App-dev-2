@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../Model/FamilyMember.dart';
 import '../Model/SharedExpense.dart';
 import '../Model/User.dart';
+import '../util/AppLocalizations.dart';
 import '../viewModel/FamilyViewModel.dart';
 import 'widgets/AppBottomNavBar.dart';
 
@@ -193,9 +194,9 @@ class _FamilyPageState extends State<FamilyPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Family Plan',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.tr('family_plan'),
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -252,12 +253,12 @@ class _FamilyPageState extends State<FamilyPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    children: const [
-                      Icon(Icons.account_balance_wallet_outlined,
+                    children: [
+                      const Icon(Icons.account_balance_wallet_outlined,
                           color: Colors.white70, size: 15),
-                      SizedBox(width: 5),
-                      Text('Family Budget',
-                          style: TextStyle(
+                      const SizedBox(width: 5),
+                      Text(AppLocalizations.tr('family_budget'),
+                          style: const TextStyle(
                               color: Colors.white70, fontSize: 13)),
                     ],
                   ),
@@ -275,8 +276,8 @@ class _FamilyPageState extends State<FamilyPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text('Spent',
-                      style: TextStyle(
+                  Text(AppLocalizations.tr('family_spent'),
+                      style: const TextStyle(
                           color: Colors.white70, fontSize: 13)),
                   const SizedBox(height: 4),
                   Text(
@@ -340,7 +341,7 @@ class _FamilyPageState extends State<FamilyPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Family Members',
+              AppLocalizations.tr('family_members'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -350,7 +351,7 @@ class _FamilyPageState extends State<FamilyPage> {
             ElevatedButton.icon(
               onPressed: _showAddMemberSheet,
               icon: const Icon(Icons.add_rounded, size: 16),
-              label: const Text('Add'),
+              label: Text(AppLocalizations.tr('add')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _gradStart,
                 foregroundColor: Colors.white,
@@ -366,7 +367,7 @@ class _FamilyPageState extends State<FamilyPage> {
         ),
         const SizedBox(height: 12),
         if (_vm.members.isEmpty)
-          _emptyCard('No members yet. Add your first family member!')
+          _emptyCard(AppLocalizations.tr('family_no_members'))
         else
           ..._vm.members.map((m) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -379,71 +380,97 @@ class _FamilyPageState extends State<FamilyPage> {
   Widget _buildMemberCard(FamilyMember member) {
     final color = _avatarColor(member.displayName);
     final initials = _initials(member.displayName);
+    final currentUserIsAdmin = _vm.isUserAdmin(widget.userID);
+    final isCurrentUser = member.userID == widget.userID;
 
-    return GestureDetector(
-      onLongPress: () => _confirmRemoveMember(member),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2))
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: BorderRadius.circular(24)),
-                  child: Center(
-                    child: Text(
-                      initials,
-                      style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16),
-                    ),
+    // Show remove button if: admin looking at non-admin member
+    final showRemove = currentUserIsAdmin && !member.isAdmin;
+    // Show leave button if: non-admin looking at their own card
+    final showLeave = !currentUserIsAdmin && isCurrentUser;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 8,
+              offset: const Offset(0, 2))
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(24)),
+                child: Center(
+                  child: Text(
+                    initials,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            member.displayName,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          member.displayName,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
-                          if (member.isAdmin) ...[
-                            const SizedBox(width: 5),
-                            const Icon(Icons.star_rounded,
-                                color: Color(0xFFFFB300), size: 16),
-                          ],
+                        ),
+                        if (member.isAdmin) ...[
+                          const SizedBox(width: 5),
+                          const Icon(Icons.star_rounded,
+                              color: Color(0xFFFFB300), size: 16),
                         ],
-                      ),
-                      Text(
-                        member.isAdmin ? 'Admin' : 'Member',
-                        style: const TextStyle(
-                            fontSize: 12, color: _greyText),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                    Text(
+                      member.isAdmin
+                          ? AppLocalizations.tr('family_admin')
+                          : AppLocalizations.tr('family_member'),
+                      style: const TextStyle(
+                          fontSize: 12, color: _greyText),
+                    ),
+                  ],
                 ),
+              ),
+              if (showRemove)
+                IconButton(
+                  icon: const Icon(Icons.person_remove_rounded,
+                      color: Colors.red, size: 20),
+                  tooltip: AppLocalizations.tr('family_remove_title'),
+                  onPressed: () => _confirmRemoveMember(member),
+                )
+              else if (showLeave)
+                TextButton(
+                  onPressed: () => _confirmLeaveGroup(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 4),
+                  ),
+                  child: Text(AppLocalizations.tr('family_leave_btn'),
+                      style: const TextStyle(fontSize: 13)),
+                )
+              else
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -456,26 +483,37 @@ class _FamilyPageState extends State<FamilyPage> {
                       ),
                     ),
                     Text(
-                      'of \$${_fmt(member.budgetAllocation)}',
+                      '${AppLocalizations.tr('family_of')} \$${_fmt(member.budgetAllocation)}',
                       style: const TextStyle(
                           fontSize: 12, color: _greyText),
                     ),
                   ],
                 ),
+            ],
+          ),
+          if (showRemove || showLeave) ...[
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  '\$${_fmt(member.spent)} ${AppLocalizations.tr('family_of')} \$${_fmt(member.budgetAllocation)}',
+                  style: const TextStyle(fontSize: 12, color: _greyText),
+                ),
               ],
             ),
-            const SizedBox(height: 12),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: member.progress,
-                backgroundColor: Colors.grey.withOpacity(0.12),
-                valueColor: const AlwaysStoppedAnimation(_green),
-                minHeight: 6,
-              ),
-            ),
           ],
-        ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: member.progress,
+              backgroundColor: Colors.grey.withOpacity(0.12),
+              valueColor: const AlwaysStoppedAnimation(_green),
+              minHeight: 6,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -490,7 +528,7 @@ class _FamilyPageState extends State<FamilyPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Shared Expenses',
+              AppLocalizations.tr('family_shared_expenses'),
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -506,8 +544,8 @@ class _FamilyPageState extends State<FamilyPage> {
                   color: _gradStart.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text('+ Add',
-                    style: TextStyle(
+                child: Text('+ ${AppLocalizations.tr('add')}',
+                    style: const TextStyle(
                         color: _gradStart,
                         fontWeight: FontWeight.bold,
                         fontSize: 13)),
@@ -517,7 +555,7 @@ class _FamilyPageState extends State<FamilyPage> {
         ),
         const SizedBox(height: 12),
         if (_vm.sharedExpenses.isEmpty)
-          _emptyCard('No shared expenses yet. Add your first one!')
+          _emptyCard(AppLocalizations.tr('family_no_expenses'))
         else
           ..._vm.sharedExpenses.map((e) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -570,7 +608,7 @@ class _FamilyPageState extends State<FamilyPage> {
                         fontWeight: FontWeight.bold,
                         color: Theme.of(context).colorScheme.onSurface,
                       )),
-                  Text('Paid by ${expense.paidByName}',
+                  Text('${AppLocalizations.tr('family_paid_by_prefix')} ${expense.paidByName}',
                       style: const TextStyle(
                           fontSize: 12, color: _greyText)),
                   Text(_fmtDate(expense.date),
@@ -591,7 +629,7 @@ class _FamilyPageState extends State<FamilyPage> {
                   ),
                 ),
                 Text(
-                  '\$${perPerson.toStringAsFixed(2)}/person',
+                  '\$${perPerson.toStringAsFixed(2)}${AppLocalizations.tr('family_per_person')}',
                   style:
                       const TextStyle(fontSize: 11, color: _greyText),
                 ),
@@ -626,8 +664,8 @@ class _FamilyPageState extends State<FamilyPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Family Insights',
-                    style: TextStyle(
+                Text(AppLocalizations.tr('family_insights'),
+                    style: const TextStyle(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.bold)),
@@ -664,15 +702,15 @@ class _FamilyPageState extends State<FamilyPage> {
                   color: _gradStart, size: 48),
             ),
             const SizedBox(height: 20),
-            Text('Create Your Family Plan',
+            Text(AppLocalizations.tr('family_setup_title'),
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.onSurface,
                 )),
             const SizedBox(height: 8),
-            const Text(
-              'Track budgets and shared expenses\nwith your family members.',
+            Text(
+              AppLocalizations.tr('family_setup_body'),
               textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: 14, color: _greyText, height: 1.5),
@@ -681,7 +719,7 @@ class _FamilyPageState extends State<FamilyPage> {
             ElevatedButton.icon(
               onPressed: _showCreateGroupSheet,
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Create Family Plan'),
+              label: Text(AppLocalizations.tr('family_create_btn')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: _gradStart,
                 foregroundColor: Colors.white,
@@ -757,8 +795,7 @@ class _FamilyPageState extends State<FamilyPage> {
   void _showAddExpenseSheet() {
     if (_vm.members.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Add family members first before logging expenses.')),
+        SnackBar(content: Text(AppLocalizations.tr('family_add_members_first'))),
       );
       return;
     }
@@ -798,25 +835,23 @@ class _FamilyPageState extends State<FamilyPage> {
   Future<void> _confirmRemoveMember(FamilyMember member) async {
     if (member.isAdmin) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Cannot remove the group admin.')),
+        SnackBar(content: Text(AppLocalizations.tr('family_cannot_remove_admin'))),
       );
       return;
     }
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove Member'),
-        content: Text(
-            'Remove ${member.displayName} from the family plan?'),
+        title: Text(AppLocalizations.tr('family_remove_title')),
+        content: Text('${AppLocalizations.tr('family_remove')} ${member.displayName}?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text(AppLocalizations.tr('cancel'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Remove'),
+            child: Text(AppLocalizations.tr('family_remove')),
           ),
         ],
       ),
@@ -824,20 +859,45 @@ class _FamilyPageState extends State<FamilyPage> {
     if (ok == true) await _vm.removeMember(member);
   }
 
+  Future<void> _confirmLeaveGroup() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.tr('family_leave_title')),
+        content: Text(AppLocalizations.tr('family_leave_confirm')),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(AppLocalizations.tr('cancel'))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text(AppLocalizations.tr('family_leave_btn')),
+          ),
+        ],
+      ),
+    );
+    if (ok == true) {
+      await _vm.leaveGroup(widget.userID);
+      // After leaving, reload to show setup state.
+      if (mounted) await _vm.load(widget.userID);
+    }
+  }
+
   Future<void> _confirmDeleteExpense(SharedExpense expense) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Expense'),
-        content: Text('Delete "${expense.name}"?'),
+        title: Text(AppLocalizations.tr('family_delete_expense_title')),
+        content: Text('${AppLocalizations.tr('delete')} "${expense.name}"?'),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
+              child: Text(AppLocalizations.tr('cancel'))),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.tr('delete')),
           ),
         ],
       ),
@@ -908,17 +968,17 @@ class _CreateGroupSheetState extends State<_CreateGroupSheet> {
                     borderRadius: BorderRadius.circular(2)),
               ),
             ),
-            const Text('Create Family Plan',
-                style: TextStyle(
+            Text(AppLocalizations.tr('family_create_btn'),
+                style: const TextStyle(
                     fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
-            _field('Family Name', _nameCtrl,
+            _field(AppLocalizations.tr('family_group_name'), _nameCtrl,
                 hint: 'e.g. Doe Family'),
             const SizedBox(height: 12),
-            _field('Total Family Budget (\$)', _budgetCtrl,
+            _field(AppLocalizations.tr('family_total_budget'), _budgetCtrl,
                 hint: '5000'),
             const SizedBox(height: 12),
-            _field('Your Personal Budget (\$)', _myBudgetCtrl,
+            _field(AppLocalizations.tr('family_personal_budget'), _myBudgetCtrl,
                 hint: '2000'),
             const SizedBox(height: 24),
             SizedBox(
@@ -938,8 +998,8 @@ class _CreateGroupSheetState extends State<_CreateGroupSheet> {
                         width: 20,
                         child: CircularProgressIndicator(
                             color: Colors.white, strokeWidth: 2))
-                    : const Text('Create Plan',
-                        style: TextStyle(
+                    : Text(AppLocalizations.tr('family_create_plan_btn'),
+                        style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold)),
               ),
@@ -1031,12 +1091,12 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
     if (!mounted) return;
     if (user == null) {
       setState(() {
-        _lookupError = 'No account found with that email.';
+        _lookupError = AppLocalizations.tr('family_not_found');
         _looking = false;
       });
     } else if (widget.isMember(user.userID)) {
       setState(() {
-        _lookupError = '${user.firstName} is already in this group.';
+        _lookupError = '${user.firstName} ${AppLocalizations.tr('family_already_member')}';
         _looking = false;
       });
     } else {
@@ -1080,16 +1140,16 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                     borderRadius: BorderRadius.circular(2)),
               ),
             ),
-            const Text('Add Family Member',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(AppLocalizations.tr('family_add_member_title'),
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
-            const Text(
-              'Search by the email they used to sign up.',
-              style: TextStyle(fontSize: 13, color: Color(0xFF888888)),
+            Text(
+              AppLocalizations.tr('family_add_member_hint'),
+              style: const TextStyle(fontSize: 13, color: Color(0xFF888888)),
             ),
             const SizedBox(height: 20),
-            const Text('Email Address',
-                style: TextStyle(fontSize: 13, color: Color(0xFF888888))),
+            Text(AppLocalizations.tr('family_email'),
+                style: const TextStyle(fontSize: 13, color: Color(0xFF888888))),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -1131,8 +1191,8 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                             height: 18,
                             child: CircularProgressIndicator(
                                 color: Colors.white, strokeWidth: 2))
-                        : const Text('Look Up',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        : Text(AppLocalizations.tr('family_look_up'),
+                            style: const TextStyle(fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -1202,8 +1262,8 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text('Budget Allocation (\$)',
-                  style: TextStyle(
+              Text(AppLocalizations.tr('family_budget_alloc'),
+                  style: const TextStyle(
                       fontSize: 13, color: Color(0xFF888888))),
               const SizedBox(height: 8),
               TextField(
@@ -1241,8 +1301,8 @@ class _AddMemberSheetState extends State<_AddMemberSheet> {
                           width: 20,
                           child: CircularProgressIndicator(
                               color: Colors.white, strokeWidth: 2))
-                      : const Text('Add to Family Plan',
-                          style: TextStyle(
+                      : Text(AppLocalizations.tr('family_add_to_plan'),
+                          style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold)),
                 ),
@@ -1341,12 +1401,12 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
                     borderRadius: BorderRadius.circular(2)),
               ),
             ),
-            const Text('Add Shared Expense',
-                style: TextStyle(
+            Text(AppLocalizations.tr('family_add_expense_title'),
+                style: const TextStyle(
                     fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 20),
-            const Text('Expense Name',
-                style: TextStyle(
+            Text(AppLocalizations.tr('family_expense_name'),
+                style: const TextStyle(
                     fontSize: 13, color: Color(0xFF888888))),
             const SizedBox(height: 8),
             TextField(
@@ -1366,8 +1426,8 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            const Text('Amount (\$)',
-                style: TextStyle(
+            Text(AppLocalizations.tr('family_amount'),
+                style: const TextStyle(
                     fontSize: 13, color: Color(0xFF888888))),
             const SizedBox(height: 8),
             TextField(
@@ -1388,8 +1448,8 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            const Text('Paid By',
-                style: TextStyle(
+            Text(AppLocalizations.tr('family_paid_by'),
+                style: const TextStyle(
                     fontSize: 13, color: Color(0xFF888888))),
             const SizedBox(height: 8),
             DropdownButtonFormField<FamilyMember>(
@@ -1413,8 +1473,8 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
               onChanged: (v) => setState(() => _paidBy = v!),
             ),
             const SizedBox(height: 12),
-            const Text('Category',
-                style: TextStyle(
+            Text(AppLocalizations.tr('family_category'),
+                style: const TextStyle(
                     fontSize: 13, color: Color(0xFF888888))),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
@@ -1456,8 +1516,8 @@ class _AddExpenseSheetState extends State<_AddExpenseSheet> {
                         width: 20,
                         child: CircularProgressIndicator(
                             color: Colors.white, strokeWidth: 2))
-                    : const Text('Add Expense',
-                        style: TextStyle(
+                    : Text(AppLocalizations.tr('family_add_expense_btn'),
+                        style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold)),
               ),
@@ -1532,15 +1592,15 @@ class _GroupSettingsSheetState extends State<_GroupSettingsSheet> {
                   borderRadius: BorderRadius.circular(2)),
             ),
           ),
-          const Text('Group Settings',
+          Text(AppLocalizations.tr('family_settings_title'),
               style:
-                  TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
           const SizedBox(height: 4),
           Text('${widget.group.groupName}',
               style: const TextStyle(color: Color(0xFF888888))),
           const SizedBox(height: 20),
-          const Text('Total Family Budget (\$)',
-              style: TextStyle(fontSize: 13, color: Color(0xFF888888))),
+          Text(AppLocalizations.tr('family_total_budget'),
+              style: const TextStyle(fontSize: 13, color: Color(0xFF888888))),
           const SizedBox(height: 8),
           TextField(
             controller: _budgetCtrl,
@@ -1576,8 +1636,8 @@ class _GroupSettingsSheetState extends State<_GroupSettingsSheet> {
                       width: 20,
                       child: CircularProgressIndicator(
                           color: Colors.white, strokeWidth: 2))
-                  : const Text('Save Changes',
-                      style: TextStyle(
+                  : Text(AppLocalizations.tr('family_save_changes'),
+                      style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold)),
             ),

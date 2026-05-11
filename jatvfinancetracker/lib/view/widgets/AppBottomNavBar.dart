@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../util/AppLocalizations.dart';
 import '../BudgetTrackerPage.dart';
 import '../FamilyPage.dart';
 import '../GoalsPage.dart';
@@ -16,13 +17,13 @@ class AppBottomNavBar extends StatelessWidget {
     required this.userID,
   });
 
-  static const _items = <_NavItem>[
-    _NavItem(Icons.home_rounded, 'Home'),
-    _NavItem(Icons.history, 'History'),
-    _NavItem(Icons.attach_money, 'Money'),
-    _NavItem(Icons.pie_chart_outline, 'Budget'),
-    _NavItem(Icons.people_outline, 'Family'),
-    _NavItem(Icons.track_changes_outlined, 'Goals'),
+  static List<_NavItem> get _items => [
+    _NavItem(Icons.home_rounded, AppLocalizations.tr('nav_home')),
+    _NavItem(Icons.history, AppLocalizations.tr('nav_history')),
+    _NavItem(Icons.attach_money, AppLocalizations.tr('nav_money')),
+    _NavItem(Icons.pie_chart_outline, AppLocalizations.tr('nav_budget')),
+    _NavItem(Icons.people_outline, AppLocalizations.tr('nav_family')),
+    _NavItem(Icons.track_changes_outlined, AppLocalizations.tr('nav_goals')),
   ];
 
   void _handleTap(BuildContext context, int target) {

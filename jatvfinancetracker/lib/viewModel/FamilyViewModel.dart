@@ -145,6 +145,24 @@ class FamilyViewModel extends ChangeNotifier {
     return _group?.memberUserIDs.contains(userID) ?? false;
   }
 
+  bool isUserAdmin(String userID) {
+    return _group?.adminUserID == userID;
+  }
+
+  FamilyMember? memberForUser(String userID) {
+    try {
+      return _members.firstWhere((m) => m.userID == userID);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> leaveGroup(String userID) async {
+    final member = memberForUser(userID);
+    if (member == null) return;
+    await removeMember(member);
+  }
+
   Future<void> addMember({
     required String userID,
     required String displayName,
