@@ -7,7 +7,6 @@ import 'HomePage.dart';
 import '2FAPage.dart';
 import 'EmailVerificationPage.dart';
 import '../viewModel/LoginViewModel.dart';
-import '../Repository/UserSettingsRepository.dart';
 
 class loginPage extends StatelessWidget {
   const loginPage({super.key});
@@ -29,7 +28,6 @@ class _loginCardState extends State<loginCard> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final LoginViewModel _vm = LoginViewModel();
-  final UserSettingsRepository _settingsRepo = UserSettingsRepository();
 
   @override
   void dispose() {
@@ -56,28 +54,14 @@ class _loginCardState extends State<loginCard> {
         return;
       }
 
-      final settings = await _settingsRepo.getOrCreate(userID);
-      if (!mounted) return;
-      if (settings.twoFactorEnabled) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => TwoFactorPage(
-              userID: userID,
-              email: _vm.user!.email,
-            ),
-          ),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => homePage(userID: userID),
-          ),
-        );
-      }
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => homePage(userID: userID),
+        ),
+      );
     } else if (_vm.mfaRequired) {
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => TwoFactorPage(resolver: _vm.mfaResolver!),

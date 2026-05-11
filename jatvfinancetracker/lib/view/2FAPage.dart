@@ -5,12 +5,11 @@ import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'HomePage.dart';
 
 class TwoFactorPage extends StatefulWidget {
+  /// Provided when Firebase Auth throws FirebaseAuthMultiFactorException
+  /// during sign-in (i.e. the user has TOTP enrolled).
   final fb.MultiFactorResolver? resolver;
-  final String? userID;
-  final String? email;
-  const TwoFactorPage({super.key, this.resolver, this.userID, this.email})
-      : assert(resolver != null || userID != null,
-            'Pass either a resolver (real MFA) or a userID (app gate).');
+
+  const TwoFactorPage({super.key, required this.resolver});
 
   @override
   State<TwoFactorPage> createState() => _TwoFactorPageState();
@@ -68,19 +67,53 @@ class _TwoFactorPageState extends State<TwoFactorPage> {
       _error = null;
     });
 
-    await Future.delayed(Duration(milliseconds: 400));
-    if (!mounted) return;
+    try {
+      final resolver = widget.resolver!;
 
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(
-        builder: (_) => homePage(userID: widget.userID!),
-      ),
-      (route) => false,
-    );
+      // Find the TOTP hint among enrolled factors.
+      final totpHints =
+          resolver.hints.whereType<fb.TotpMultiFactorInfo>().toList();
+      if (totpHints.isEmpty) {
+        setState(() {
+          _isLoading = false;
+          _error = 'No TOTP factor found for this account.';
+        });
+        return;
+      }
+
+      final assertion = fb.TotpMultiFactorGenerator.getAssertionForSignIn(
+        totpHints.first.uid,
+        code,
+      );
+      await resolver.resolveSignIn(assertion);
+
+      // After resolution, the current Firebase user is signed in.
+      final uid = fb.FirebaseAuth.instance.currentUser?.uid ?? '';
+      if (!mounted) return;
+
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => homePage(userID: uid)),
+        (route) => false,
+      );
+    } on fb.FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      for (final c in _controllers) c.clear();
+      FocusScope.of(context).requestFocus(_focusNodes[0]);
+      setState(() {
+        _isLoading = false;
+        _error = e.message ?? 'Invalid code. Please try again.';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _error = 'Verification failed. Please try again.';
+      });
+    }
   }
 
-  void _resend() {
+  void _clearFields() {
     for (final c in _controllers) c.clear();
     FocusScope.of(context).requestFocus(_focusNodes[0]);
     setState(() => _error = null);
@@ -142,9 +175,7 @@ class _TwoFactorPageState extends State<TwoFactorPage> {
           ),
           SizedBox(height: 12),
           Text(
-            widget.email != null && widget.email!.isNotEmpty
-                ? 'Enter the 6-digit code sent to ${widget.email}'
-                : 'Enter the 6-digit code to continue',
+            'Enter the 6-digit code from your authenticator app',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.5),
           ),
@@ -231,15 +262,21 @@ class _TwoFactorPageState extends State<TwoFactorPage> {
           ),
           SizedBox(height: 24),
           TextButton(
-            onPressed: _isLoading ? null : _resend,
+            onPressed: _isLoading ? null : _clearFields,
             child: Text(
-              'Resend Code',
+              'Clear & Try Again',
               style: TextStyle(
                 color: Color(0xFF4A90D9),
                 fontWeight: FontWeight.w700,
                 fontSize: 14,
               ),
             ),
+          ),
+          SizedBox(height: 16),
+          Text(
+            'Make sure your device clock is accurate.\nTOTP codes refresh every 30 seconds.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.6),
           ),
           SizedBox(height: 40),
         ],

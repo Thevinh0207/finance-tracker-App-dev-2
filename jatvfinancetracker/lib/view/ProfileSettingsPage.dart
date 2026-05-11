@@ -10,6 +10,7 @@ import '../util/LanguageController.dart';
 import '../util/ThemeController.dart';
 import 'ChangePasswordPage.dart';
 import 'EditProfilePage.dart';
+import 'TotpSetupPage.dart';
 import 'loginPage.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
@@ -92,6 +93,66 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     );
   }
 
+  Future<void> _on2FAToggle(bool enable) async {
+    if (enable) {
+      // Navigate to the TOTP enrollment wizard.
+      final enrolled = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TotpSetupPage(
+            userID: widget.user.userID,
+            email: _user.email,
+          ),
+        ),
+      );
+      if (enrolled == true && mounted) {
+        // Reload settings so the toggle reflects the new state.
+        final fresh = await _repo.getOrCreate(widget.user.userID);
+        if (mounted) setState(() => _settings = fresh);
+      }
+    } else {
+      // Confirm before unenrolling.
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Disable Two-Factor Authentication?'),
+          content: Text(
+            'Your account will be less secure without 2FA. '
+            'Are you sure you want to disable it?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(AppLocalizations.tr('cancel')),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: Text('Disable'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
+
+      try {
+        final authUser = fb.FirebaseAuth.instance.currentUser;
+        if (authUser != null) {
+          final enrolled = await authUser.multiFactor.getEnrolledFactors();
+          for (final factor in enrolled) {
+            await authUser.multiFactor.unenroll(multiFactorInfo: factor);
+          }
+        }
+        await _update(_settings!.copyWith(twoFactorEnabled: false));
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to disable 2FA: $e')),
+        );
+      }
+    }
+  }
+
   Future<void> _logout(BuildContext context) async {
     await fb.FirebaseAuth.instance.signOut();
     // Reset theme so the auth screens always render in light mode.
@@ -142,8 +203,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   icon: Icons.shield_outlined,
                   label: AppLocalizations.tr('profile_2fa'),
                   value: _twoFactorEnabled,
-                  onChanged: (v) =>
-                      _update(_settings!.copyWith(twoFactorEnabled: v)),
+                  onChanged: _on2FAToggle,
                 ),
               ]),
               SizedBox(height: 16),
