@@ -18,9 +18,14 @@ class FamilyViewModel extends ChangeNotifier {
   final TransactionRepository _tRepo;
   final CategorieRepository _cRepo;
 
-  FamilyGroup? _group;
-  List<FamilyMember> _members = [];
-  List<SharedExpense> _sharedExpenses = [];
+  // All groups the user belongs to.
+  List<FamilyGroup> _allGroups = [];
+  int _selectedIndex = 0;
+
+  // Per-group data keyed by groupID.
+  final Map<String, List<FamilyMember>> _membersMap = {};
+  final Map<String, List<SharedExpense>> _expensesMap = {};
+
   String _currentUserName = '';
   bool _isLoading = false;
   String? _error;
@@ -35,21 +40,42 @@ class FamilyViewModel extends ChangeNotifier {
         _tRepo = transactionRepository ?? TransactionRepository(),
         _cRepo = categorieRepository ?? CategorieRepository();
 
-  FamilyGroup? get group => _group;
-  List<FamilyMember> get members => List.unmodifiable(_members);
-  List<SharedExpense> get sharedExpenses => List.unmodifiable(_sharedExpenses);
+  // ── Public getters ────────────────────────────────────────────────────────
+
+  /// All groups the user belongs to.
+  List<FamilyGroup> get groups => List.unmodifiable(_allGroups);
+
+  /// The currently displayed group, or null if the user has none.
+  FamilyGroup? get group =>
+      _allGroups.isNotEmpty ? _allGroups[_selectedIndex] : null;
+
+  /// Members of the currently displayed group.
+  List<FamilyMember> get members {
+    final g = group;
+    return g != null ? (_membersMap[g.groupID] ?? []) : [];
+  }
+
+  /// Shared expenses of the currently displayed group.
+  List<SharedExpense> get sharedExpenses {
+    final g = group;
+    return g != null ? (_expensesMap[g.groupID] ?? []) : [];
+  }
+
+  int get selectedIndex => _selectedIndex;
   String get currentUserName => _currentUserName;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  bool get hasGroup => _group != null;
+  bool get hasGroup => _allGroups.isNotEmpty;
+  bool get hasMultipleGroups => _allGroups.length > 1;
 
-  double get totalSpent => _members.fold(0.0, (sum, m) => sum + m.spent);
-  double get totalBudget => _group?.totalBudget ?? 0.0;
+  double get totalSpent =>
+      members.fold(0.0, (sum, m) => sum + m.spent);
+  double get totalBudget => group?.totalBudget ?? 0.0;
   double get budgetProgress =>
       totalBudget > 0 ? (totalSpent / totalBudget).clamp(0.0, 1.0) : 0.0;
 
   String get insightMessage {
-    if (_members.isEmpty) {
+    if (members.isEmpty) {
       return 'Add family members to start tracking your budget together!';
     }
     if (totalBudget <= 0) return 'Set a family budget to track your spending.';
@@ -61,19 +87,31 @@ class FamilyViewModel extends ChangeNotifier {
     return 'Your family has used the full budget this month. Review your shared expenses!';
   }
 
-  // Derive each member's spent from the shared expenses they paid.
-  void _recalculateMemberSpending() {
-    _members = _members.map((m) {
-      final spent = _sharedExpenses
+  // ── Switch group ──────────────────────────────────────────────────────────
+
+  void switchToGroup(int index) {
+    if (index < 0 || index >= _allGroups.length) return;
+    _selectedIndex = index;
+    notifyListeners();
+  }
+
+  // ── Private helpers ───────────────────────────────────────────────────────
+
+  /// Recomputes each member's `spent` field from the group's shared expenses.
+  void _recalculateMemberSpending(String groupID) {
+    final ms = _membersMap[groupID] ?? [];
+    final es = _expensesMap[groupID] ?? [];
+    _membersMap[groupID] = ms.map((m) {
+      final spent = es
           .where((e) => e.paidByUserID == m.userID)
           .fold(0.0, (sum, e) => sum + e.amount);
       return m.copyWith(spent: spent);
     }).toList();
   }
 
-  // Find or create a "Shared Expenses" expense category for a user.
   Future<String> _sharedExpenseCategoryID(String userID) async {
-    final cats = await _cRepo.getByUserAndType(userID, TransactionType.expense);
+    final cats =
+        await _cRepo.getByUserAndType(userID, TransactionType.expense);
     final existing = cats.where(
       (c) => c.categoryName.toLowerCase() == 'shared expenses',
     );
@@ -87,6 +125,8 @@ class FamilyViewModel extends ChangeNotifier {
     return await _cRepo.create(newCat);
   }
 
+  // ── Load ──────────────────────────────────────────────────────────────────
+
   Future<void> load(String userID) async {
     _isLoading = true;
     _error = null;
@@ -96,12 +136,19 @@ class FamilyViewModel extends ChangeNotifier {
       if (user != null) {
         _currentUserName = '${user.firstName} ${user.lastName}'.trim();
       }
-      _group = await _repo.getGroupByUser(userID);
-      if (_group != null) {
-        _members = await _repo.getMembers(_group!.groupID);
-        _sharedExpenses = await _repo.getSharedExpenses(_group!.groupID);
-        _recalculateMemberSpending();
-      }
+
+      _allGroups = await _repo.getGroupsByUser(userID);
+
+      // Keep the selected index in bounds after a reload.
+      if (_selectedIndex >= _allGroups.length) _selectedIndex = 0;
+
+      // Load members + expenses for every group in parallel.
+      await Future.wait(_allGroups.map((g) async {
+        _membersMap[g.groupID] = await _repo.getMembers(g.groupID);
+        _expensesMap[g.groupID] =
+            await _repo.getSharedExpenses(g.groupID);
+        _recalculateMemberSpending(g.groupID);
+      }));
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -109,6 +156,8 @@ class FamilyViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // ── Create group ──────────────────────────────────────────────────────────
 
   Future<void> createGroup({
     required String groupName,
@@ -131,31 +180,38 @@ class FamilyViewModel extends ChangeNotifier {
         budgetAllocation: adminBudget,
       );
       await load(adminUserID);
+      // Switch to the newly created group (it's the last one after reload).
+      _selectedIndex = _allGroups.length - 1;
+      notifyListeners();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
     }
   }
 
+  // ── User lookups ──────────────────────────────────────────────────────────
+
   Future<User?> lookupUserByEmail(String email) async {
     return await _userRepo.getByEmail(email.trim().toLowerCase());
   }
 
   bool isMember(String userID) {
-    return _group?.memberUserIDs.contains(userID) ?? false;
+    return group?.memberUserIDs.contains(userID) ?? false;
   }
 
   bool isUserAdmin(String userID) {
-    return _group?.adminUserID == userID;
+    return group?.adminUserID == userID;
   }
 
   FamilyMember? memberForUser(String userID) {
     try {
-      return _members.firstWhere((m) => m.userID == userID);
+      return members.firstWhere((m) => m.userID == userID);
     } catch (_) {
       return null;
     }
   }
+
+  // ── Member actions ────────────────────────────────────────────────────────
 
   Future<void> leaveGroup(String userID) async {
     final member = memberForUser(userID);
@@ -168,16 +224,18 @@ class FamilyViewModel extends ChangeNotifier {
     required String displayName,
     required double budgetAllocation,
   }) async {
-    if (_group == null) return;
+    final g = group;
+    if (g == null) return;
     try {
       await _repo.addMember(
-        groupID: _group!.groupID,
+        groupID: g.groupID,
         userID: userID,
         displayName: displayName,
         role: 'member',
         budgetAllocation: budgetAllocation,
       );
-      _members = await _repo.getMembers(_group!.groupID);
+      _membersMap[g.groupID] = await _repo.getMembers(g.groupID);
+      _recalculateMemberSpending(g.groupID);
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -186,17 +244,20 @@ class FamilyViewModel extends ChangeNotifier {
   }
 
   Future<void> removeMember(FamilyMember member) async {
-    if (_group == null) return;
+    final g = group;
+    if (g == null) return;
     try {
-      await _repo.removeMember(
-          _group!.groupID, member.memberID, member.userID);
-      _members = await _repo.getMembers(_group!.groupID);
+      await _repo.removeMember(g.groupID, member.memberID, member.userID);
+      _membersMap[g.groupID] = await _repo.getMembers(g.groupID);
+      _recalculateMemberSpending(g.groupID);
       notifyListeners();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
     }
   }
+
+  // ── Shared expenses ───────────────────────────────────────────────────────
 
   Future<void> addSharedExpense({
     required String name,
@@ -206,11 +267,11 @@ class FamilyViewModel extends ChangeNotifier {
     required String categoryIcon,
     DateTime? date,
   }) async {
-    if (_group == null) return;
+    final g = group;
+    if (g == null) return;
     try {
       final expenseDate = date ?? DateTime.now();
 
-      // Auto-create a transaction in the payer's History.
       String? linkedTransactionID;
       try {
         final categoryID = await _sharedExpenseCategoryID(paidByUserID);
@@ -222,15 +283,13 @@ class FamilyViewModel extends ChangeNotifier {
           categoryID: categoryID,
           amount: amount,
           date: expenseDate,
-          note: 'Shared expense — ${_group!.groupName}',
+          note: 'Shared expense — ${g.groupName}',
         );
         linkedTransactionID = await _tRepo.create(t);
-      } catch (_) {
-        // Transaction creation is best-effort; don't block the expense save.
-      }
+      } catch (_) {}
 
       await _repo.addSharedExpense(
-        groupID: _group!.groupID,
+        groupID: g.groupID,
         name: name,
         amount: amount,
         paidByUserID: paidByUserID,
@@ -239,8 +298,8 @@ class FamilyViewModel extends ChangeNotifier {
         categoryIcon: categoryIcon,
         linkedTransactionID: linkedTransactionID,
       );
-      _sharedExpenses = await _repo.getSharedExpenses(_group!.groupID);
-      _recalculateMemberSpending();
+      _expensesMap[g.groupID] = await _repo.getSharedExpenses(g.groupID);
+      _recalculateMemberSpending(g.groupID);
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -249,17 +308,17 @@ class FamilyViewModel extends ChangeNotifier {
   }
 
   Future<void> deleteSharedExpense(SharedExpense expense) async {
-    if (_group == null) return;
+    final g = group;
+    if (g == null) return;
     try {
-      // Remove the linked transaction from History too.
       if (expense.linkedTransactionID != null) {
         try {
           await _tRepo.delete(expense.linkedTransactionID!);
         } catch (_) {}
       }
-      await _repo.deleteSharedExpense(_group!.groupID, expense.expenseID);
-      _sharedExpenses = await _repo.getSharedExpenses(_group!.groupID);
-      _recalculateMemberSpending();
+      await _repo.deleteSharedExpense(g.groupID, expense.expenseID);
+      _expensesMap[g.groupID] = await _repo.getSharedExpenses(g.groupID);
+      _recalculateMemberSpending(g.groupID);
       notifyListeners();
     } catch (e) {
       _error = e.toString();
@@ -268,11 +327,12 @@ class FamilyViewModel extends ChangeNotifier {
   }
 
   Future<void> updateGroupBudget(String userID, double newBudget) async {
-    if (_group == null) return;
+    final g = group;
+    if (g == null) return;
     try {
-      final updated = _group!.copyWith(totalBudget: newBudget);
+      final updated = g.copyWith(totalBudget: newBudget);
       await _repo.updateGroup(updated);
-      _group = updated;
+      _allGroups[_selectedIndex] = updated;
       notifyListeners();
     } catch (e) {
       _error = e.toString();

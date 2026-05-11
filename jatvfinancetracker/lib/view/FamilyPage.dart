@@ -202,7 +202,7 @@ class _FamilyPageState extends State<FamilyPage> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  if (_vm.hasGroup)
+                  if (_vm.hasGroup && !_vm.hasMultipleGroups)
                     Text(
                       _vm.group!.groupName,
                       style: const TextStyle(
@@ -226,11 +226,51 @@ class _FamilyPageState extends State<FamilyPage> {
                 ),
             ],
           ),
+          if (_vm.hasMultipleGroups) ...[
+            const SizedBox(height: 14),
+            _buildGroupSwitcher(),
+          ],
           if (_vm.hasGroup) ...[
-            const SizedBox(height: 18),
+            const SizedBox(height: 14),
             _buildBudgetCard(),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildGroupSwitcher() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: _vm.groups.asMap().entries.map((entry) {
+          final i = entry.key;
+          final g = entry.value;
+          final selected = i == _vm.selectedIndex;
+          return GestureDetector(
+            onTap: () => _vm.switchToGroup(i),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.only(right: 8),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: selected
+                    ? Colors.white
+                    : Colors.white.withOpacity(0.22),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                g.groupName,
+                style: TextStyle(
+                  color: selected ? _gradStart : Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -879,7 +919,7 @@ class _FamilyPageState extends State<FamilyPage> {
     );
     if (ok == true) {
       await _vm.leaveGroup(widget.userID);
-      // After leaving, reload to show setup state.
+      // Reload — user may still be in other groups.
       if (mounted) await _vm.load(widget.userID);
     }
   }

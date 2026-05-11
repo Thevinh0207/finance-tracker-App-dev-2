@@ -21,22 +21,36 @@ class FamilyRepository {
 
   // ── Group ─────────────────────────────────────────────────────────────────
 
-  Future<FamilyGroup?> getGroupByUser(String userID) async {
+  /// Returns every family group the user belongs to (admin or member).
+  Future<List<FamilyGroup>> getGroupsByUser(String userID) async {
+    final seen = <String>{};
+    final results = <FamilyGroup>[];
+
+    // Groups where the user is the admin.
     final adminSnap = await _groups
         .where('adminUserID', isEqualTo: userID)
-        .limit(1)
         .get();
-    if (adminSnap.docs.isNotEmpty) {
-      return FamilyGroup.fromMap(adminSnap.docs.first.data());
+    for (final doc in adminSnap.docs) {
+      final g = FamilyGroup.fromMap(doc.data());
+      if (seen.add(g.groupID)) results.add(g);
     }
+
+    // Groups where the user is a non-admin member.
     final memberSnap = await _groups
         .where('memberUserIDs', arrayContains: userID)
-        .limit(1)
         .get();
-    if (memberSnap.docs.isNotEmpty) {
-      return FamilyGroup.fromMap(memberSnap.docs.first.data());
+    for (final doc in memberSnap.docs) {
+      final g = FamilyGroup.fromMap(doc.data());
+      if (seen.add(g.groupID)) results.add(g);
     }
-    return null;
+
+    return results;
+  }
+
+  /// Convenience — returns null when the user has no groups.
+  Future<FamilyGroup?> getGroupByUser(String userID) async {
+    final all = await getGroupsByUser(userID);
+    return all.isNotEmpty ? all.first : null;
   }
 
   Future<String> createGroup({
