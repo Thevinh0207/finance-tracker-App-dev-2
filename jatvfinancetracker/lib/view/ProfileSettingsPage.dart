@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fb;
 
 import '../Model/User.dart';
 import '../Model/UserSettings.dart';
@@ -136,14 +135,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       if (ok != true || !mounted) return;
 
       try {
-        final authUser = fb.FirebaseAuth.instance.currentUser;
-        if (authUser != null) {
-          final enrolled = await authUser.multiFactor.getEnrolledFactors();
-          for (final factor in enrolled) {
-            await authUser.multiFactor.unenroll(multiFactorInfo: factor);
-          }
-        }
-        await _update(_settings!.copyWith(twoFactorEnabled: false));
+        // Clear the stored secret and disable the flag in Firestore.
+        await _update(
+          _settings!.copyWith(twoFactorEnabled: false, totpSecret: null),
+        );
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(

@@ -1,6 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'package:otp/otp.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 import '../Repository/UserSettingsRepository.dart';
@@ -23,9 +25,9 @@ class _TotpSetupPageState extends State<TotpSetupPage> {
   final UserSettingsRepository _settingsRepo = UserSettingsRepository();
   final TextEditingController _codeCtrl = TextEditingController();
 
-  fb.TotpSecret? _secret;
-  String? _qrUri;
-  bool _isLoading = true;
+  late final String _secret;
+  late final String _qrUri;
+
   bool _isVerifying = false;
   bool _enrolled = false;
   String? _error;
@@ -33,7 +35,8 @@ class _TotpSetupPageState extends State<TotpSetupPage> {
   @override
   void initState() {
     super.initState();
-    _generateSecret();
+    _secret = _generateBase32Secret();
+    _qrUri = _buildOtpAuthUri(_secret);
   }
 
   @override
@@ -42,29 +45,66 @@ class _TotpSetupPageState extends State<TotpSetupPage> {
     super.dispose();
   }
 
-  Future<void> _generateSecret() async {
-    try {
-      final user = fb.FirebaseAuth.instance.currentUser!;
-      final session = await user.multiFactor.getSession();
-      final secret = await fb.TotpMultiFactorGenerator.generateSecret(session);
-      final qrUri = secret.generateQrCodeUrl(
-        accountName: widget.email,
-        issuer: 'JATVFinance',
-      );
-      if (!mounted) return;
-      setState(() {
-        _secret = secret;
-        _qrUri = qrUri;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = 'Failed to generate secret: $e';
-        _isLoading = false;
-      });
-    }
+  // ── Helpers ──────────────────────────────────────────────────────────────
+
+  /// Generates a cryptographically random 20-byte secret encoded as base32.
+  /// This is the standard length used by Google Authenticator.
+  String _generateBase32Secret() {
+    final rng = Random.secure();
+    final bytes = List<int>.generate(20, (_) => rng.nextInt(256));
+    return _base32Encode(bytes);
   }
+
+  String _base32Encode(List<int> bytes) {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+    var result = StringBuffer();
+    var buffer = 0;
+    var bitsLeft = 0;
+    for (final byte in bytes) {
+      buffer = (buffer << 8) | (byte & 0xff);
+      bitsLeft += 8;
+      while (bitsLeft >= 5) {
+        bitsLeft -= 5;
+        result.write(alphabet[(buffer >> bitsLeft) & 0x1f]);
+      }
+    }
+    if (bitsLeft > 0) {
+      result.write(alphabet[(buffer << (5 - bitsLeft)) & 0x1f]);
+    }
+    return result.toString();
+  }
+
+  String _buildOtpAuthUri(String secret) {
+    final issuer = Uri.encodeComponent('JATVFinance');
+    final account = Uri.encodeComponent(widget.email);
+    return 'otpauth://totp/$issuer:$account'
+        '?secret=$secret'
+        '&issuer=$issuer'
+        '&algorithm=SHA1'
+        '&digits=6'
+        '&period=30';
+  }
+
+  /// Checks the code against the current 30-second window AND the previous one
+  /// to handle slight clock differences between the phone and the server.
+  bool _verifyCode(String code) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final current = OTP.generateTOTPCodeString(
+      _secret,
+      now,
+      algorithm: Algorithm.SHA1,
+      isGoogle: true,
+    );
+    final previous = OTP.generateTOTPCodeString(
+      _secret,
+      now - 30000,
+      algorithm: Algorithm.SHA1,
+      isGoogle: true,
+    );
+    return code == current || code == previous;
+  }
+
+  // ── Actions ───────────────────────────────────────────────────────────────
 
   Future<void> _enroll() async {
     final code = _codeCtrl.text.trim();
@@ -72,42 +112,42 @@ class _TotpSetupPageState extends State<TotpSetupPage> {
       setState(() => _error = 'Enter the 6-digit code from your authenticator app.');
       return;
     }
+
     setState(() {
       _isVerifying = true;
       _error = null;
     });
 
-    try {
-      final user = fb.FirebaseAuth.instance.currentUser!;
-      final assertion = fb.TotpMultiFactorGenerator.getAssertionForEnrollment(
-        _secret!,
-        code,
-      );
-      await user.multiFactor.enroll(assertion, displayName: 'Authenticator App');
+    if (!_verifyCode(code)) {
+      setState(() {
+        _isVerifying = false;
+        _error = 'Incorrect code. Make sure you scanned the right QR code and try again.';
+      });
+      return;
+    }
 
-      // Mirror the flag in Firestore so ProfileSettingsPage can show the right state.
+    try {
+      // Store the secret and enable 2FA in Firestore.
       final settings = await _settingsRepo.getOrCreate(widget.userID);
-      await _settingsRepo.save(settings.copyWith(twoFactorEnabled: true));
+      await _settingsRepo.save(
+        settings.copyWith(twoFactorEnabled: true, totpSecret: _secret),
+      );
 
       if (!mounted) return;
       setState(() {
         _isVerifying = false;
         _enrolled = true;
       });
-    } on fb.FirebaseAuthException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _isVerifying = false;
-        _error = e.message ?? 'Verification failed. Check the code and try again.';
-      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isVerifying = false;
-        _error = 'Enrollment failed: $e';
+        _error = 'Failed to save 2FA settings: $e';
       });
     }
   }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -124,11 +164,7 @@ class _TotpSetupPageState extends State<TotpSetupPage> {
         ),
       ),
       body: SafeArea(
-        child: _isLoading
-            ? Center(child: CircularProgressIndicator(color: Color(0xFF4A90D9)))
-            : _enrolled
-                ? _buildSuccess()
-                : _buildSetupBody(theme),
+        child: _enrolled ? _buildSuccess() : _buildSetupBody(theme),
       ),
     );
   }
@@ -156,121 +192,111 @@ class _TotpSetupPageState extends State<TotpSetupPage> {
             ),
           ),
           SizedBox(height: 20),
+
           Text(
-            'Link Your Authenticator App',
+            'Step 1 — Scan this QR code',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.onSurface,
             ),
           ),
-          SizedBox(height: 8),
+          SizedBox(height: 6),
           Text(
-            'Scan the QR code below with Google Authenticator, Authy,\nor any TOTP-compatible app.',
+            'Open Google Authenticator or Authy and scan the code below.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.5),
           ),
-          SizedBox(height: 28),
+          SizedBox(height: 24),
 
           // QR Code
-          if (_qrUri != null && _error == null) ...[
-            Center(
-              child: Container(
-                padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: QrImageView(
-                  data: _qrUri!,
-                  version: QrVersions.auto,
-                  size: 200,
-                  backgroundColor: Colors.white,
-                ),
+          Center(
+            child: Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: QrImageView(
+                data: _qrUri,
+                version: QrVersions.auto,
+                size: 200,
+                backgroundColor: Colors.white,
               ),
             ),
-            SizedBox(height: 20),
+          ),
+          SizedBox(height: 20),
 
-            // Manual secret key (tap to copy)
-            Text(
-              'Or enter this key manually in your app:',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: Colors.grey),
-            ),
-            SizedBox(height: 8),
-            GestureDetector(
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: _secret!.secretKey));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Secret key copied to clipboard'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              },
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: theme.cardColor,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: Color(0xFF4A90D9).withOpacity(0.3),
-                  ),
+          // Manual secret key
+          Text(
+            "Can't scan? Enter this key manually:",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: Colors.grey),
+          ),
+          SizedBox(height: 8),
+          GestureDetector(
+            onTap: () {
+              Clipboard.setData(ClipboardData(text: _secret));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Secret key copied to clipboard'),
+                  duration: Duration(seconds: 2),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _secret!.secretKey,
-                        style: TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 13,
-                          letterSpacing: 1.5,
-                          color: theme.colorScheme.onSurface,
-                          fontWeight: FontWeight.w600,
-                        ),
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: theme.cardColor,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: Color(0xFF4A90D9).withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _secret,
+                      style: TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                        letterSpacing: 1.5,
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(width: 8),
-                    Icon(Icons.copy, size: 18, color: Color(0xFF4A90D9)),
-                  ],
-                ),
+                  ),
+                  SizedBox(width: 8),
+                  Icon(Icons.copy, size: 18, color: Color(0xFF4A90D9)),
+                ],
               ),
             ),
-          ],
-
-          if (_error != null && _secret == null)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              child: Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.red, fontSize: 13),
-              ),
-            ),
+          ),
 
           SizedBox(height: 28),
+          Divider(),
+          SizedBox(height: 20),
 
-          // Step 2 label
+          // Step 2
           Text(
-            'Step 2 — Enter the 6-digit code from your app:',
+            'Step 2 — Enter the 6-digit code from your app',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 15,
               fontWeight: FontWeight.w600,
               color: theme.colorScheme.onSurface,
             ),
           ),
           SizedBox(height: 10),
 
-          // Code input
           TextField(
             controller: _codeCtrl,
             keyboardType: TextInputType.number,
@@ -304,7 +330,7 @@ class _TotpSetupPageState extends State<TotpSetupPage> {
           ),
           SizedBox(height: 16),
 
-          if (_error != null && _secret != null)
+          if (_error != null)
             Padding(
               padding: EdgeInsets.only(bottom: 12),
               child: Text(
@@ -317,7 +343,7 @@ class _TotpSetupPageState extends State<TotpSetupPage> {
           SizedBox(
             height: 52,
             child: ElevatedButton(
-              onPressed: (_isVerifying || _secret == null) ? null : _enroll,
+              onPressed: _isVerifying ? null : _enroll,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFF4A90D9),
                 shape: RoundedRectangleBorder(
@@ -371,15 +397,12 @@ class _TotpSetupPageState extends State<TotpSetupPage> {
             Text(
               'Two-Factor Authentication Enabled!',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 12),
             Text(
-              "Your account is now secured with your authenticator app. "
-              "You'll be asked for a code each time you sign in.",
+              "Your account is now secured. You'll be asked for a "
+              "6-digit code from your authenticator app each time you sign in.",
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.5),
             ),

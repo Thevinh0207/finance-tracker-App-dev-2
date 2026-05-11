@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'package:otp/otp.dart';
 
+import '../Repository/UserSettingsRepository.dart';
 import 'HomePage.dart';
 
 class TwoFactorPage extends StatefulWidget {
-  /// Provided when Firebase Auth throws FirebaseAuthMultiFactorException
-  /// during sign-in (i.e. the user has TOTP enrolled).
-  final fb.MultiFactorResolver? resolver;
+  final String userID;
 
-  const TwoFactorPage({super.key, required this.resolver});
+  const TwoFactorPage({super.key, required this.userID});
 
   @override
   State<TwoFactorPage> createState() => _TwoFactorPageState();
 }
 
 class _TwoFactorPageState extends State<TwoFactorPage> {
+  final UserSettingsRepository _settingsRepo = UserSettingsRepository();
+
   final int _codeLength = 6;
   late final List<TextEditingController> _controllers;
   late final List<FocusNode> _focusNodes;
@@ -68,47 +69,54 @@ class _TwoFactorPageState extends State<TwoFactorPage> {
     });
 
     try {
-      final resolver = widget.resolver!;
+      // Fetch the stored TOTP secret from Firestore.
+      final settings = await _settingsRepo.getOrCreate(widget.userID);
+      final secret = settings.totpSecret;
 
-      // Find the TOTP hint among enrolled factors.
-      final totpHints =
-          resolver.hints.whereType<fb.TotpMultiFactorInfo>().toList();
-      if (totpHints.isEmpty) {
+      if (secret == null || secret.isEmpty) {
         setState(() {
           _isLoading = false;
-          _error = 'No TOTP factor found for this account.';
+          _error = '2FA is not properly configured. Please re-enable it in settings.';
         });
         return;
       }
 
-      final assertion = fb.TotpMultiFactorGenerator.getAssertionForSignIn(
-        totpHints.first.uid,
-        code,
+      // Check current 30-second window and the previous one (handles slight
+      // clock differences between the phone and this device).
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final current = OTP.generateTOTPCodeString(
+        secret,
+        now,
+        algorithm: Algorithm.SHA1,
+        isGoogle: true,
       );
-      await resolver.resolveSignIn(assertion);
-
-      // After resolution, the current Firebase user is signed in.
-      final uid = fb.FirebaseAuth.instance.currentUser?.uid ?? '';
-      if (!mounted) return;
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => homePage(userID: uid)),
-        (route) => false,
+      final previous = OTP.generateTOTPCodeString(
+        secret,
+        now - 30000,
+        algorithm: Algorithm.SHA1,
+        isGoogle: true,
       );
-    } on fb.FirebaseAuthException catch (e) {
-      if (!mounted) return;
-      for (final c in _controllers) c.clear();
-      FocusScope.of(context).requestFocus(_focusNodes[0]);
-      setState(() {
-        _isLoading = false;
-        _error = e.message ?? 'Invalid code. Please try again.';
-      });
+
+      if (code == current || code == previous) {
+        if (!mounted) return;
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => homePage(userID: widget.userID)),
+          (route) => false,
+        );
+      } else {
+        for (final c in _controllers) c.clear();
+        FocusScope.of(context).requestFocus(_focusNodes[0]);
+        setState(() {
+          _isLoading = false;
+          _error = 'Incorrect code. Please try again.';
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _error = 'Verification failed. Please try again.';
+        _error = 'Verification failed: $e';
       });
     }
   }
