@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../Model/Budget.dart';
+import '../util/AppLocalizations.dart';
 import '../viewModel/BudgetTrackerViewModel.dart';
 import 'AddBudgetPage.dart';
 import 'widgets/AppBottomNavBar.dart';
@@ -106,17 +107,17 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete Budget'),
-        content: Text('Delete "${p.budget.budgetName}"? This cannot be undone.'),
+        title: Text(AppLocalizations.tr('budget_delete_title')),
+        content: Text('"${p.budget.budgetName}" — ${AppLocalizations.tr('goals_delete_body')}'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.tr('cancel')),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: _dangerRed),
-            child: const Text('Delete'),
+            child: Text(AppLocalizations.tr('delete')),
           ),
         ],
       ),
@@ -203,9 +204,9 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Budget Tracker',
-                style: TextStyle(
+              Text(
+                AppLocalizations.tr('budget_title'),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -250,9 +251,9 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Total Budget This Month',
-            style: TextStyle(color: Colors.white70, fontSize: 13),
+          Text(
+            AppLocalizations.tr('budget_total_this_month'),
+            style: const TextStyle(color: Colors.white70, fontSize: 13),
           ),
           const SizedBox(height: 6),
           Text(
@@ -267,8 +268,8 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Spent',
-                  style: TextStyle(color: Colors.white70, fontSize: 13)),
+              Text(AppLocalizations.tr('budget_spent'),
+                  style: const TextStyle(color: Colors.white70, fontSize: 13)),
               Text('\$${_fmt(spent)}',
                   style: const TextStyle(
                       color: Colors.white,
@@ -290,8 +291,8 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Remaining',
-                  style: TextStyle(color: Colors.white70, fontSize: 13)),
+              Text(AppLocalizations.tr('budget_remaining'),
+                  style: const TextStyle(color: Colors.white70, fontSize: 13)),
               Text('\$${_fmt(remaining)}',
                   style: const TextStyle(
                       color: Colors.white,
@@ -325,14 +326,15 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Budget Alert',
-                    style: TextStyle(
+                Text(AppLocalizations.tr('budget_alert'),
+                    style: const TextStyle(
                         color: Color(0xFFD17B00),
                         fontSize: 14,
                         fontWeight: FontWeight.bold)),
                 const SizedBox(height: 2),
                 Text(
-                  "You're approaching your limit in ${_vm.alertCount} ${_vm.alertCount == 1 ? 'category' : 'categories'}",
+                  '${AppLocalizations.tr('budget_alert_prefix')} ${_vm.alertCount} '
+                  '${_vm.alertCount == 1 ? AppLocalizations.tr('budget_alert_cat_one') : AppLocalizations.tr('budget_alert_cat_many')}',
                   style: const TextStyle(
                       color: Color(0xFFB35900), fontSize: 12),
                 ),
@@ -351,7 +353,7 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Budget Categories',
+          AppLocalizations.tr('budget_categories'),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
@@ -361,9 +363,9 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
         if (_vm.progressList.length > 3)
           GestureDetector(
             onTap: _showAllBudgets,
-            child: const Text(
-              'View All',
-              style: TextStyle(
+            child: Text(
+              AppLocalizations.tr('budget_view_all'),
+              style: const TextStyle(
                 fontSize: 14,
                 color: _primaryBlue,
                 fontWeight: FontWeight.w600,
@@ -405,7 +407,7 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'All Budget Categories',
+                    AppLocalizations.tr('budget_all_categories'),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -462,7 +464,7 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No budgets created yet',
+            AppLocalizations.tr('budget_none_title'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -470,16 +472,16 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Set monthly limits for your spending\ncategories to stay on track.',
+          Text(
+            AppLocalizations.tr('budget_none_body'),
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 13, color: _greyText, height: 1.4),
+            style: const TextStyle(fontSize: 13, color: _greyText, height: 1.4),
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: _openAddBudget,
             icon: const Icon(Icons.add_rounded, size: 18),
-            label: const Text('Create Budget'),
+            label: Text(AppLocalizations.tr('budget_create_btn')),
             style: ElevatedButton.styleFrom(
               backgroundColor: _primaryBlue,
               foregroundColor: Colors.white,
@@ -563,7 +565,8 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '${p.transactionCount} transaction${p.transactionCount == 1 ? '' : 's'} · $periodLabel',
+                              '${p.transactionCount} '
+                              '${p.transactionCount == 1 ? AppLocalizations.tr('budget_tx_one') : AppLocalizations.tr('budget_tx_many')} · $periodLabel',
                               style: const TextStyle(
                                   fontSize: 12, color: _greyText),
                               overflow: TextOverflow.ellipsis,
@@ -577,9 +580,9 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Spent',
-                          style:
-                              TextStyle(fontSize: 13, color: _greyText)),
+                      Text(AppLocalizations.tr('budget_spent'),
+                          style: const TextStyle(
+                              fontSize: 13, color: _greyText)),
                       RichText(
                         text: TextSpan(
                           style: TextStyle(
@@ -618,8 +621,8 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
                     children: [
                       Text(
                         p.isOverBudget
-                            ? 'Over budget by \$${_fmt(p.spent - p.budget.amount)}'
-                            : '$pctText% used',
+                            ? '${AppLocalizations.tr('budget_over_by')} \$${_fmt(p.spent - p.budget.amount)}'
+                            : '$pctText% ${AppLocalizations.tr('budget_used')}',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -628,8 +631,8 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
                       ),
                       Text(
                         p.isOverBudget
-                            ? '\$0 left'
-                            : '\$${_fmt(p.remaining)} left',
+                            ? '\$0 ${AppLocalizations.tr('budget_left')}'
+                            : '\$${_fmt(p.remaining)} ${AppLocalizations.tr('budget_left')}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: _greyText,
@@ -649,11 +652,11 @@ class _BudgetTrackerPageState extends State<BudgetTrackerPage> {
   String _periodLabel(BudgetPeriod period) {
     switch (period) {
       case BudgetPeriod.weekly:
-        return 'Weekly';
+        return AppLocalizations.tr('budget_period_weekly');
       case BudgetPeriod.monthly:
-        return 'Monthly';
+        return AppLocalizations.tr('budget_period_monthly');
       case BudgetPeriod.yearly:
-        return 'Yearly';
+        return AppLocalizations.tr('budget_period_yearly');
     }
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 
+import '../util/AppLocalizations.dart';
 import '../viewModel/MoneyFlowViewModel.dart';
 import 'widgets/AppBottomNavBar.dart';
 
@@ -94,7 +95,7 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
           const Icon(Icons.error_outline, color: _expenseRed, size: 48),
           const SizedBox(height: 12),
           Text(
-            'Failed to load data',
+            AppLocalizations.tr('money_failed_load'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -104,7 +105,8 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
           const SizedBox(height: 8),
           TextButton(
             onPressed: () => _vm.refresh(widget.userID),
-            child: const Text('Retry', style: TextStyle(color: _primaryBlue)),
+            child: Text(AppLocalizations.tr('money_retry'),
+                style: const TextStyle(color: _primaryBlue)),
           ),
         ],
       ),
@@ -140,9 +142,9 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Money Flow',
-            style: TextStyle(
+          Text(
+            AppLocalizations.tr('money_title'),
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -154,7 +156,7 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
             children: [
               Expanded(
                 child: _summaryCard(
-                  label: 'Total Income',
+                  label: AppLocalizations.tr('history_total_income'),
                   amount: _vm.currentIncome,
                   icon: Icons.arrow_downward_rounded,
                   iconColor: _incomeGreen,
@@ -163,7 +165,7 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
               const SizedBox(width: 12),
               Expanded(
                 child: _summaryCard(
-                  label: 'Total Expenses',
+                  label: AppLocalizations.tr('history_total_expenses'),
                   amount: _vm.currentExpenses,
                   icon: Icons.arrow_upward_rounded,
                   iconColor: _expenseRed,
@@ -221,9 +223,9 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
             ),
           ),
           const SizedBox(height: 2),
-          const Text(
-            'This month',
-            style: TextStyle(color: Colors.white60, fontSize: 10),
+          Text(
+            AppLocalizations.tr('home_this_month'),
+            style: const TextStyle(color: Colors.white60, fontSize: 10),
           ),
         ],
       ),
@@ -233,7 +235,11 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
   // ── Tab Bar ───────────────────────────────────────────────────────────────
 
   Widget _buildTabBar() {
-    const tabs = ['Overview', 'Income', 'Expenses'];
+    final tabs = [
+      AppLocalizations.tr('money_tab_overview'),
+      AppLocalizations.tr('home_income'),
+      AppLocalizations.tr('home_expenses'),
+    ];
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
@@ -311,7 +317,7 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
           Padding(
             padding: const EdgeInsets.only(left: 4),
             child: Text(
-              '6-Month Trend',
+              AppLocalizations.tr('money_6mo_trend'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -392,8 +398,11 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
                       final isIncome =
                           (_selectedTab == 0 && rodIndex == 0) ||
                           _selectedTab == 1;
+                      final label = isIncome
+                          ? AppLocalizations.tr('history_income')
+                          : AppLocalizations.tr('history_expense');
                       return BarTooltipItem(
-                        '${isIncome ? 'Income' : 'Expense'}\n\$${_fmt(rod.toY)}',
+                        '$label\n\$${_fmt(rod.toY)}',
                         const TextStyle(
                           color: Colors.white,
                           fontSize: 11,
@@ -413,18 +422,18 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
               if (_selectedTab != 2) ...[
                 _dot(_incomeGreen),
                 const SizedBox(width: 4),
-                const Text(
-                  'Income',
-                  style: TextStyle(fontSize: 11, color: _greyText),
+                Text(
+                  AppLocalizations.tr('history_income'),
+                  style: const TextStyle(fontSize: 11, color: _greyText),
                 ),
                 const SizedBox(width: 16),
               ],
               if (_selectedTab != 1) ...[
                 _dot(_expenseRed),
                 const SizedBox(width: 4),
-                const Text(
-                  'Expense',
-                  style: TextStyle(fontSize: 11, color: _greyText),
+                Text(
+                  AppLocalizations.tr('history_expense'),
+                  style: const TextStyle(fontSize: 11, color: _greyText),
                 ),
               ],
             ],
@@ -483,9 +492,9 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Net Cash Flow',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+              Text(
+                AppLocalizations.tr('money_net_cash_flow'),
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
               ),
               const SizedBox(height: 6),
               Text(
@@ -499,8 +508,8 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
               const SizedBox(height: 4),
               Text(
                 positive
-                    ? 'Great job! You\'re saving this month.'
-                    : 'Expenses exceed income this month.',
+                    ? AppLocalizations.tr('money_saving_msg')
+                    : AppLocalizations.tr('money_overspend_msg'),
                 style: const TextStyle(color: Colors.white70, fontSize: 11),
               ),
             ],
@@ -547,7 +556,9 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
         ),
         child: Center(
           child: Text(
-            'No ${isIncome ? 'income' : 'expense'} categories this month.',
+            isIncome
+                ? AppLocalizations.tr('money_no_income_cats')
+                : AppLocalizations.tr('money_no_expense_cats'),
             style: const TextStyle(color: _greyText, fontSize: 13),
           ),
         ),
@@ -577,7 +588,9 @@ class _MoneyFlowPageState extends State<MoneyFlowPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isIncome ? 'Income by Category' : 'Expenses by Category',
+            isIncome
+                ? AppLocalizations.tr('money_income_by_cat')
+                : AppLocalizations.tr('money_expenses_by_cat'),
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
